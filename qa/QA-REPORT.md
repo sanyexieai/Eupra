@@ -44,9 +44,9 @@ Date: 2026-10-23 UTC. Scope: local development implementation. No live model, pu
 - Reviewer HTTP checks verified source-image metadata stripping, MIME/content validation, compressed image dimension bounds, owner-only access and unauthorized source reuse rejection.
 - Frontend TypeScript and Vite production build passed. Eight retained Vitest/jsdom tests passed: draft/file preservation across locale/navigation, auth Escape/close/back behavior, unavailable-provider side effects blocked, demo result routing/labeling, mobile navigation DOM/CN community absence and genuine lineage labeling. These are component tests with mocked API responses, not rendered browser tests.
 
-## Not passed / not executed successfully
+## Historical first-checkpoint browser limitation (superseded by exact-head CI above)
 
-- Actual browser E2E and rendered desktop/mobile visual comparison are **not verified**. Chromium launch was blocked by local socket permissions in this executor; the permitted elevated launch failed in the sandbox launcher. The supported cloud browser cannot open local file URLs and could not reach this executor's isolated localhost. No restriction was bypassed. The error occurred before app browser tests ran.
+- At the first checkpoint, actual browser E2E and rendered desktop/mobile visual comparison were **not verified**. Chromium launch was blocked by local socket permissions in this executor; the permitted elevated launch failed in the sandbox launcher. The supported cloud browser cannot open local file URLs and could not reach this executor's isolated localhost. No restriction was bypassed. The error occurred before app browser tests ran.
 - `qa/browser_smoke.py` and `.github/workflows/checks.yml` retain genuine browser checks for an authorized suitable environment. These scripts are not evidence of a pass until they execute successfully.
 - Actual source design PNG pixels were inspected, but this is not runtime visual verification of the implementation.
 - No real mobile-device, Safari/WebKit, Firefox, accessibility audit, load/soak, network-interruption, provider billing or production penetration test is claimed.

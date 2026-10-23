@@ -195,6 +195,13 @@ try:
    passed('all three original input samples select actual source assets')
    page.locator('.cp-samples').scroll_into_view_if_needed()
    page.screenshot(path=str(ART/('CN-02-mobile-samples-viewport-'+MODE+'.png')),full_page=False)
+   # Sample selection shows a dismissible confirmation toast above the footer.
+   # Exercise its visible close control before testing the underlying footer target.
+   sample_notice=page.locator('.toast[role=status]')
+   expect(sample_notice).to_be_visible()
+   sample_notice.get_by_role('button',name='Close',exact=True).click()
+   expect(sample_notice).to_have_count(0)
+   passed('sample confirmation notice can be dismissed before accessing footer controls')
    footer_link=page.locator('footer').get_by_role('link',name='Account & settings',exact=True)
    footer_link.evaluate("el=>el.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'})")
    page.evaluate("()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))")

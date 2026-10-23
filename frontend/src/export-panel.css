@@ -512,3 +512,14 @@
     transition: none !important;
   }
 }
+/* Override the dark-surface review defaults on this light consent panel. */
+.ep-page .ep-review.local-review-panel p {
+  color: #665575;
+}
+.ep-page .ep-review.local-review-panel label,
+.ep-page .ep-review.local-review-panel label span {
+  color: #51405f;
+}
+.ep-page .ep-review.local-review-panel h3 {
+  color: #493651;
+}

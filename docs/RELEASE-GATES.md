@@ -16,7 +16,7 @@ This repository is an independent local engineering implementation based on Eupr
 ## Before real user pilot
 
 1. Select and configure authorized image-generation and multimodal safety providers. Review their privacy/retention, cost limits, and processing geography.
-2. Implement and test the V2 Reality Parser, Possibility Miner, seed diversity, Taste Judge, Story Memory, visual director, final judge and safety gateway against real provider outputs.
+2. Validate the implemented configurable V2 boundaries and real model behavior: Reality Parser, Possibility Miner, seed diversity, Taste Judge, Story Memory, visual director, final judge and safety gateway against real provider outputs.
 3. Provide reliable storage, job recovery, backup/restore, service monitoring, rate limiting and session-security review.
 4. Verify output provenance, visible and metadata AI labels, safety-gated sharing, share revocation, source-asset privacy and authorization for recipient remix.
 5. Enable video only after real 5-second success/failure/cancellation and daily-credit reservation/settlement tests pass.
