@@ -1,0 +1,125 @@
+{
+  "note": "Byte provenance only; not browser visual acceptance. Original package SHA256: 27fd2c71375fb4409f839cf36934ed95a66a45057bbe2fae481d1316005f63b5",
+  "assets": [
+    {
+      "file": "frontend/public/assets/cat-ceo-hero.webp",
+      "bytes": 115382,
+      "sha256": "5710be5bd2f85eeb8ff94947f6977092e06758c89d0e9b3c68ed81c5f88cfa66",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-12/CN-12/assets/cat-ceo-hero.webp",
+      "duplicate_reference_count": 14
+    },
+    {
+      "file": "frontend/public/assets/cat-moon-hero.webp",
+      "bytes": 103236,
+      "sha256": "ce18cfc4cdef5be27a3f30654c8a599287d73debfd038388ab5c642ceede09ab",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-12/CN-12/assets/cat-moon-hero.webp",
+      "duplicate_reference_count": 13
+    },
+    {
+      "file": "frontend/public/assets/cn12_cinematic_demo_5s.mp4",
+      "bytes": 135184,
+      "sha256": "7153c6ab2c92a5c201ba7937198f4d5d7a21fc97c536db2a200bbbdcae2314a4",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-12/CN-12/assets/cn12_cinematic_demo_5s.mp4",
+      "duplicate_reference_count": 3
+    },
+    {
+      "file": "frontend/public/assets/cn12_cinematic_demo_5s_en.mp4",
+      "bytes": 133334,
+      "sha256": "8dabf2589a9ca13fca5fdb17ee5139210a6d26d89140caec02797467ca0c51a3",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-12/CN-12/assets/cn12_cinematic_demo_5s_en.mp4",
+      "duplicate_reference_count": 3
+    },
+    {
+      "file": "frontend/public/assets/demo-source.webp",
+      "bytes": 63054,
+      "sha256": "bccf5602fb6dff05f644a823db9463d8e4cfecbaab1070278c3aa549f177c0f1",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-12/CN-12/assets/demo-source.webp",
+      "duplicate_reference_count": 13
+    },
+    {
+      "file": "frontend/public/assets/example-cat.jpg",
+      "bytes": 129827,
+      "sha256": "203a1c184e175925c186974e82eac9f05a54987cb74d289f431de72299ec81f9",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-03/Eupra_CN03_V0.2_Delivery/assets/example-cat.jpg",
+      "duplicate_reference_count": 2
+    },
+    {
+      "file": "frontend/public/assets/example-run.svg",
+      "bytes": 1253,
+      "sha256": "f62fb7ced3bbaaefabd59d169a3746068b0e3f013e086d4cfb44414bdd300137",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-03/Eupra_CN03_V0.2_Delivery/assets/example-run.svg",
+      "duplicate_reference_count": 2
+    },
+    {
+      "file": "frontend/public/assets/example-world.svg",
+      "bytes": 7057,
+      "sha256": "65e174b6c9640f4fdb568a4153cb36b853d281289a6435fee52734321f5c2867",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-01/Eupra_CN01_V0.2_Delivery/assets/portal-world.svg",
+      "duplicate_reference_count": 2
+    },
+    {
+      "file": "frontend/public/assets/golden-girl.webp",
+      "bytes": 51706,
+      "sha256": "b906c8a4e496b992a4f00d9628820973badb0bfb08a8cc6e99c8c9c2563d5052",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-11/CN-11/assets/golden-girl.webp",
+      "duplicate_reference_count": 10
+    },
+    {
+      "file": "frontend/public/assets/logo.png",
+      "bytes": 1219503,
+      "sha256": "1bb36a16792c2575f332fb742c9884c5d617e24ba275c58e32dd44a2166fc52f",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/logo/logo.png",
+      "duplicate_reference_count": 1
+    },
+    {
+      "file": "frontend/public/assets/logo1.png",
+      "bytes": 1071985,
+      "sha256": "c618b9df826ea1049e2d791afab1b345a93ed270f1359df8aebd89dc7b4ff4d8",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/logo/logo1.png",
+      "duplicate_reference_count": 1
+    },
+    {
+      "file": "frontend/public/assets/logo2.png",
+      "bytes": 889552,
+      "sha256": "ee87359cd158bfb803c26bd75987a4408586658ecaae8fab3236bf87fc86d8ed",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/logo/logo2.png",
+      "duplicate_reference_count": 1
+    },
+    {
+      "file": "frontend/public/assets/orb-mark.svg",
+      "bytes": 1008,
+      "sha256": "7b9be1b4b542a05d4d0af7093b56dfb5ed49cdf80a3cabf990c86be9fa867819",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-12/CN-12/assets/orb-mark.svg",
+      "duplicate_reference_count": 16
+    },
+    {
+      "file": "frontend/public/assets/portal-gateway.jpg",
+      "bytes": 101165,
+      "sha256": "99a68bb97e7e26c2718ed9f65eece7c8d373ba893b03a7cea5eee586bdc8612f",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_WEB-01/Eupra_WEB01_V0.2_Delivery/assets/portal-gateway.jpg",
+      "duplicate_reference_count": 1
+    },
+    {
+      "file": "frontend/public/assets/portal-world.svg",
+      "bytes": 7057,
+      "sha256": "65e174b6c9640f4fdb568a4153cb36b853d281289a6435fee52734321f5c2867",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-01/Eupra_CN01_V0.2_Delivery/assets/portal-world.svg",
+      "duplicate_reference_count": 2
+    }
+  ]
+}

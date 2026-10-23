@@ -1,0 +1,50 @@
+{
+  "version": "synthetic-rubric-0.1",
+  "status": "unscored_design_criteria",
+  "dimensions": {
+    "surprise": 0.18,
+    "relevance": 0.14,
+    "specificity": 0.14,
+    "deadpan": 0.12,
+    "identity_fantasy": 0.1,
+    "visual_impact": 0.1,
+    "remixability": 0.1,
+    "shareability": 0.12
+  },
+  "rating_range": [
+    0,
+    5
+  ],
+  "missing_rating": null,
+  "score_formula": "20 * weighted_sum - configured_penalties",
+  "penalty_weights": null,
+  "hard_gates": {
+    "relevance_min": 3,
+    "specificity_min": 3,
+    "image_visual_impact_min": 2.5,
+    "safety": "independent_required_pass",
+    "source_fidelity": "independent_attainability_required"
+  },
+  "initial_bands": {
+    "green_min": 84,
+    "pairwise_min": 78,
+    "repair_min": 72,
+    "reject_below": 72
+  },
+  "blind_questions": [
+    "first_laugh",
+    "source_specificity",
+    "share_preference",
+    "continue_preference",
+    "deadpan_brand"
+  ],
+  "blind_choices": [
+    "A",
+    "B",
+    "tie",
+    "unassessable"
+  ],
+  "judgements": null,
+  "human_review_status": "not_run",
+  "provider_status": "not_run"
+}

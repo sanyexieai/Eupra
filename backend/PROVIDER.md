@@ -1,0 +1,35 @@
+# Configurable HTTP engine adapter (not connected to a live provider)
+
+The application default is `EUPRA_PROVIDER=unavailable`. `demo` is a deliberately isolated template-text development mode, never an AI model. No credentials were available or requested during implementation. A generic HTTP engine adapter is implemented and tested against a local mock; no live engine service is connected, no video integration exists, and no production public sharing is enabled; this is a runnable product foundation, not the completed production MVP.
+
+`src/engine.rs` defines the structured V2 request and response contract, weighted Taste Judge and fail-closed hard gates. Production adapter must preserve distinct request stages: safety input → reality parser → possibility miner → 18–24 seed generation covering the five diversity groups → repeat penalties → top six rank → candidate expansion → pairwise tournament → visual director → image/edit service → multimodal final judge → output safety → immutable version commit. Do not replace this sequence with one generic prompt.
+
+Production target: the trusted engine service should receive private source references via a scoped service-side storage grant, never via public upload URLs. The current local adapter instead sends normalized source_image_base64 directly to its configured endpoint, as specified below. An adapter must authenticate that service, validate request_id/model, constrain/download media only from allowlisted HTTPS asset hosts (SSRF defenses), verify full schema, require every safety-review field and AI labeling, independently pass export policy, persist audit/cost/model metadata, and only then commit output. Safety booleans in a browser request are NEVER accepted. Unavailable/invalid safety remains HOLD.
+
+Public sharing also requires revocation-aware access checks at each read and a non-source-only public DTO. Production share links are still withheld. The separate explicitly enabled loopback demo-text preview implements expiring hashed capabilities, per-read revocation checks and a safe DTO; it never grants production output review or source access. Source images stay owner-only.
+
+Video is disabled. The schema reserves an idempotent ledger but does not pretend to implement real reservations, completion, provider cancellation or quotas. Implement per-user/day reservations under a transaction, successful commits once per job, release failures/cancellations, and count only SUCCESSFUL 5-second results before enabling the feature.
+
+SQLite + single-process task dispatch is local infrastructure, not the production PostgreSQL + Redis + object-storage/CDN system. Restart fails interrupted jobs explicitly; production should use a durable leased worker queue. Additional production gates: verified accounts/reset, auth/IP rate limiting, origin/CSRF defense behind the trusted same-origin proxy, request tracing, admin review/appeals, moderation providers, metrics/alerts and security review.
+
+## Running a trusted engine adapter
+
+Set EUPRA_PROVIDER=http, EUPRA_ENGINE_URL to your trusted HTTPS engine endpoint, and EUPRA_ENGINE_KEY to its bearer credential in the server environment. Never put credentials in frontend environment variables or URLs. Loopback HTTP is accepted only for local integration testing. No redirects are followed. Requests time out after 90 seconds; responses are capped at 16 MiB.
+
+POST body is `{ "request": EngineRequest, "source_image_base64": string|null }`. Source bytes are normalized private image bytes, transmitted only to the configured engine. `request.action` is MAKE_IT_HAPPEN or PUSH_FURTHER; it includes request_id, locale, text, story_memory, seed_count (default 20; EUPRA_SEED_COUNT allows 18–24), safety_policy_version=20261020. The response is EngineResponse plus mandatory `demo:false` and optional `image_base64` (PNG/JPEG/WebP). `image_url` must be empty: arbitrary returned URLs are never fetched. Image bytes are decoded with dimension/memory limits and normalized to private PNG storage. No image bytes means an explicitly `concept_only` result.
+
+Missing/mismatched request id, model, policy version, input/output safety approval, review id, hard gates or immutable story facts fail the job without committing a version. This is a trusted service boundary, not an independent content-safety model: wire validation cannot prove the service's review was accurate. All generated versions therefore remain export HOLD; sharing cannot be enabled merely by returning export_passed=true. Cancellation suppresses output commit but cannot guarantee the upstream service stopped billing/computation.
+
+The adapter local mock test verifies actual HTTP bearer authentication, structured request and seed count, valid concept response, and output-safety refusal. It is not a live model acceptance test.
+
+## Optional locally orchestrated staged HTTP mode
+
+Set EUPRA_ENGINE_MODE=staged to use src/planning.rs through src/staged.rs. The default mode remains complete, preserving the earlier single-call engine contract. Unknown modes fail startup. No live stage service is connected or validated.
+
+Every stage calls the same configured authenticated endpoint with {request:EngineRequest,stage:"INPUT_SAFETY"|...,operation,payload,source_image_base64}. Response must be {request_id,stage,operation,demo:false,data}. All three binding fields must match. The data schema is the corresponding PlanningModel return type. Operations: input_safety, parse, mine, seeds, judge, expand, prefer, direct, render, final_judge, output_safety, update_memory. Render data is {model,cost_microunits,image_base64:null|string}; remote image URLs are rejected. Currency is UNSPECIFIED because the staged media contract does not yet supply a verified billing currency; do not interpret its cost units as dollars.
+
+The local orchestrator enforces source anchors, configured seed counts and axis diversity, duplicate/recent-event rejection, top-six score ranking, expanded concrete payoffs, pairwise ID binding, visual constraints, final quality, output-safety assertions and story-memory continuity. It does not fabricate semantic judgments: those stage responses must come from a real trusted service. The deterministic test service is only a fixture.
+
+Current stage is persisted as it is reached; successful jobs retain stage_trace. Cancellation is checked before and after each remote call. A total 240-second pipeline timeout bounds the sequence (each call also has the existing 90-second timeout). Cancellation may stop subsequent calls, but not guarantee cancellation/refund of an already issued provider call. Image decoding is bounded and offloaded. All final output remains export HOLD regardless of stage-service assertions.
+
+Staged cost_microunits currently reflects only the renderer-reported units, not total parser/judge/other calls. Complete multi-stage cost accounting and monetary spending caps are not implemented; they remain a provider/deployment integration requirement. Time/call-size bounds are not financial caps.

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 720 920">
+<defs>
+ <linearGradient id="night" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#060D22"/><stop offset=".5" stop-color="#111B38"/><stop offset="1" stop-color="#070D1A"/></linearGradient>
+ <radialGradient id="neb"><stop stop-color="#7C78FF" stop-opacity=".65"/><stop offset=".45" stop-color="#7B5AF8" stop-opacity=".16"/><stop offset="1" stop-color="#7B5AF8" stop-opacity="0"/></radialGradient>
+ <linearGradient id="litworld" x1=".13" y1=".07" x2=".8" y2="1"><stop stop-color="#F1D3FF"/><stop offset=".33" stop-color="#E9B8FF"/><stop offset=".6" stop-color="#FFCEA3"/><stop offset="1" stop-color="#8A7FF4"/></linearGradient>
+ <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#D6D6FF"/><stop offset=".20" stop-color="#CE9BFF"/><stop offset=".46" stop-color="#FFDFEF"/><stop offset=".77" stop-color="#85C5FF"/><stop offset="1" stop-color="#A18CFF"/></linearGradient>
+ <linearGradient id="doorframe" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#111327"/><stop offset=".6" stop-color="#332F53"/><stop offset="1" stop-color="#171E36"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#FFC9DA" stop-opacity=".85"/><stop offset=".48" stop-color="#A397FF" stop-opacity=".35"/><stop offset="1" stop-color="#7250FF" stop-opacity="0"/></radialGradient>
+ <radialGradient id="mist"><stop stop-color="#AAA5FB" stop-opacity=".65"/><stop offset="1" stop-color="#9F81FF" stop-opacity="0"/></radialGradient>
+ <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#222944"/><stop offset="1" stop-color="#060A15"/></linearGradient>
+ <linearGradient id="sundown" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#BBBCFF"/><stop offset=".64" stop-color="#FFC9B1"/><stop offset="1" stop-color="#B37CF5"/></linearGradient>
+ <filter id="blur30"><feGaussianBlur stdDeviation="30"/></filter>
+ <filter id="blur12"><feGaussianBlur stdDeviation="12"/></filter>
+ <filter id="soft"><feGaussianBlur stdDeviation="4"/></filter>
+ <filter id="noise"><feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="3" seed="12" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".075"/></feComponentTransfer></filter>
+ <clipPath id="inside"><path d="M229 204L505 171 514 681 244 738Z"/></clipPath>
+</defs>
+<path fill="url(#night)" d="M0 0H720V920H0Z"/>
+<ellipse cx="420" cy="500" rx="500" ry="490" fill="url(#neb)"/>
+<ellipse cx="329" cy="590" rx="370" ry="285" fill="url(#mist)" opacity=".27"/>
+<g fill="#CFD8FF"><circle cx="92" cy="69" r="1.5" opacity=".7"/><circle cx="184" cy="155" r="1"/><circle cx="611" cy="114" r="1.8" opacity=".7"/><circle cx="555" cy="217" r="1"/><circle cx="85" cy="317" r="1"/><circle cx="617" cy="343" r="1.3"/><circle cx="123" cy="433" r="1.2"/><circle cx="650" cy="484" r="1.6"/><circle cx="75" cy="537" r=".7"/><circle cx="580" cy="34" r="1.1"/><circle cx="350" cy="50" r="1"/><circle cx="259" cy="97" r="1.8"/><circle cx="487" cy="73" r="1.3"/></g>
+<path d="M0 644C125 607 182 660 265 647C387 624 446 612 720 667V920H0Z" fill="#0B1326"/>
+<path d="M0 720C113 664 150 692 245 708C378 729 510 669 720 744V920H0Z" fill="url(#floor)"/>
+<ellipse cx="373" cy="738" rx="267" ry="141" fill="url(#glow)" filter="url(#blur30)" opacity=".85"/>
+<!-- glowing frame halo -->
+<path d="M192 173L526 137 539 700 216 769Z" fill="none" stroke="#9981FF" stroke-width="44" opacity=".35" filter="url(#blur30)"/>
+<path d="M192 173L526 137 539 700 216 769Z" fill="url(#doorframe)" stroke="#414368" stroke-width="5"/>
+<path d="M216 195L513 161 526 688 236 751Z" fill="none" stroke="#D0A7FF" stroke-width="22" opacity=".4" filter="url(#blur12)"/>
+<path d="M219 193L511 158 524 689 236 753Z" fill="none" stroke="url(#rim)" stroke-width="6"/>
+<path d="M229 204L505 171 514 681 244 738Z" fill="url(#litworld)"/>
+<!-- a different world through doorway -->
+<g clip-path="url(#inside)">
+ <rect x="218" y="150" width="326" height="620" fill="url(#sundown)"/>
+ <circle cx="448" cy="276" r="82" fill="#FFF3FF" opacity=".45" filter="url(#blur30)"/>
+ <path d="M219 540C276 452 295 475 347 430C398 387 424 420 475 360L540 519V740H205Z" fill="#928BE2" opacity=".34"/>
+ <path d="M219 594L306 473 354 522 442 393 532 569V750H220Z" fill="#9D8FD4" opacity=".5"/>
+ <path d="M216 641L304 560 354 585 437 479 524 595V759H216Z" fill="#8779BB" opacity=".33"/>
+ <!-- castle city -->
+ <g fill="#9982B2" opacity=".7">
+  <path d="M401 491V364h10v-21h7v-35h9v35h8v23h10v125Z"/><path d="M358 499V393h9v-18h10v-24h7v24h13v124Z"/><path d="M444 506V416h12v-30h9v30h10v90Z"/><path d="M327 532V452h14v-20h10v100Z"/>
+ </g>
+ <g fill="#F5E4FF" opacity=".8"><path d="M420 314l3-45 3 45Z"/><path d="M381 352l3-39 3 39Z"/></g>
+ <!-- impossible flying whale -->
+ <g transform="translate(326 311) rotate(-13)">
+  <path d="M-67 8C-48-21 17-29 61-8C88-3 99-20 113-35C113-17 104 4 89 12C106 23 109 34 109 46C89 31 72 22 57 24C20 43-45 29-67 8Z" fill="#475B9E" opacity=".78"/>
+  <path d="M-64 6C-31 15 14 18 72 5C55 26-38 37-64 6Z" fill="#E5DFF6" opacity=".86"/>
+  <path d="M3 2C2 24-15 44-21 51C7 43 29 29 35 15" fill="#6979BB"/>
+  <circle cx="-40" cy="4" r="2.5" fill="#161E45"/>
+ </g>
+ <!-- cloud layers -->
+ <g fill="#FAE9FF" opacity=".71" filter="url(#soft)"><ellipse cx="271" cy="613" rx="85" ry="37"/><ellipse cx="338" cy="603" rx="103" ry="39"/><ellipse cx="461" cy="637" rx="132" ry="35"/><ellipse cx="484" cy="581" rx="71" ry="26"/></g>
+ <path d="M205 672C265 642 310 661 352 642C418 613 476 646 545 638L545 800H216Z" fill="#F8DFFF" opacity=".13"/>
+</g>
+<!-- foreground scenic platform -->
+<path d="M-12 770C171 710 241 785 345 762C469 736 529 754 732 786V930H-12Z" fill="#0A1021"/>
+<path d="M-10 816C121 796 222 788 307 808C421 839 577 798 731 820" stroke="#7E87C8" stroke-opacity=".23" stroke-width="3" fill="none"/>
+<path d="M270 756L359 705 421 697 486 758 430 801 311 803Z" fill="#2D304D" opacity=".48"/>
+<!-- woman silhouette, looking forward -->
+<g transform="translate(329 674)" fill="#0C1025">
+ <ellipse cx="0" cy="36" rx="24" ry="29"/>
+ <path d="M-24 29C-32 53-22 88-24 105C-30 123-37 148-41 163L-8 166 2 133 14 163 45 164C35 129 24 111 23 95C23 73 36 50 23 29Z"/>
+ <path d="M-17 93L-57 150 -46 154 -7 123Z"/><path d="M17 92L48 142 37 147 8 118Z"/>
+ <path d="M-8 157L-16 226-6 227 8 163Z"/><path d="M17 159L29 227 42 225 40 156Z"/>
+ <path d="M-24 18C-28-12-2-20 19-11C27-3 25 23 20 30C7 11-3 14-24 18Z" fill="#13132B"/>
+</g>
+<!-- cat silhouette at her side -->
+<g transform="translate(416 794)" fill="#0E1225"><path d="M-32 13L-26-21-6-9 8-24 32 5 35 35C24 48-21 49-32 33Z"/><ellipse cx="1" cy="56" rx="31" ry="34"/><path d="M21 72C60 76 65 25 52 7" fill="none" stroke="#11152A" stroke-width="14" stroke-linecap="round"/><circle cx="-11" cy="19" r="2" fill="#C9B9ED"/><circle cx="15" cy="19" r="2" fill="#C9B9ED"/></g>
+<ellipse cx="382" cy="861" rx="220" ry="35" fill="#01040D" opacity=".8" filter="url(#blur12)"/>
+<path d="M0 0H720V920H0Z" filter="url(#noise)" opacity=".28"/>
+</svg>

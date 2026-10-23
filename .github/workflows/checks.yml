@@ -1,0 +1,58 @@
+name: Engineering checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local-contracts-and-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Rust toolchain
+        run: rustup update stable --profile minimal && rustup default stable
+      - name: Rust tests and build
+        run: cargo test --manifest-path backend/Cargo.toml --locked && cargo build --manifest-path backend/Cargo.toml --locked
+      - name: Frontend dependencies and build
+        run: npm ci --prefix frontend && npm run build --prefix frontend && npm test --prefix frontend
+      - name: API default and demo smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          for mode in unavailable demo; do
+            EUPRA_PROVIDER=$mode EUPRA_DATABASE="$RUNNER_TEMP/$mode.sqlite3" EUPRA_BIND=127.0.0.1:8787 backend/target/debug/eupra-api >"$RUNNER_TEMP/$mode.log" 2>&1 &
+            pid=$!
+            trap 'kill "$pid" 2>/dev/null || true' EXIT
+            for n in $(seq 1 100); do curl -fsS http://127.0.0.1:8787/api/v1/config >/dev/null && break || sleep .1; done
+            python3 qa/api_smoke.py
+            kill "$pid"; wait "$pid" || true
+            trap - EXIT
+          done
+      - name: Provider contract and security regressions
+        run: python3 qa/provider_security.py
+      - name: Local sharing security and asset provenance
+        run: python3 qa/local_share_security.py && python3 qa/verify_assets.py
+      - name: Offline engine evaluation contract
+        run: python3 qa/engine_eval/validate.py && python3 -m unittest discover -s qa/engine_eval -p "test_*.py"
+      - name: Install browser test runtime
+        run: pip install 'playwright>=1.48,<2' && python3 -m playwright install --with-deps chromium
+      - name: Real browser flows (demo)
+        run: python3 qa/browser_smoke.py demo
+      - name: Real browser flows (unconfigured)
+        run: python3 qa/browser_smoke.py unavailable
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-check-evidence
+          path: qa/artifacts/
+          retention-days: 7

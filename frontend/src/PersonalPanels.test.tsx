@@ -1,0 +1,158 @@
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { ProfileSettings, VideoStudio, VideoBalance } from "./PersonalPanels";
+import { api, post, type Version } from "./api";
+import zh from "./locales/personal-zh-CN.json";
+import en from "./locales/personal-en-US.json";
+vi.mock("./api", () => ({ api: vi.fn(), post: vi.fn() }));
+const call = vi.mocked(api);
+const version: Version = {
+  id: "v1",
+  root_version_id: "v1",
+  parent_version_id: null,
+  story_world_id: "w1",
+  creator_id: "u1",
+  title: "My real version",
+  caption: "Owned work caption",
+  image_url: "/owned.jpg",
+  source_id: null,
+  depth: 0,
+  remix_allowed: true,
+  safety_state: "SAFE",
+  demo: false,
+  created_at: 1,
+};
+const makeApp = () => ({
+  locale: "en-US",
+  user: { id: "u1", email: "owner@example.test" },
+  setUser: vi.fn(),
+  setAuth: vi.fn(),
+  setLocale: vi.fn(),
+  setNotice: vi.fn(),
+  error: vi.fn(),
+  config: {},
+  t: (k: string) => k,
+});
+beforeEach(() => {
+  vi.clearAllMocks();
+  call.mockImplementation(async (path: string) => {
+    if (path === "/me/video-credits")
+      return {
+        remaining: 1,
+        daily_limit: 2,
+        successful_today: 1,
+        enabled: false,
+      };
+    if (path === "/me/works") return { items: [version] };
+    if (path === "/me/settings")
+      return { locale: "en", default_remix_allowed: false };
+    throw Error(path);
+  });
+});
+afterEach(cleanup);
+describe("personal panels", () => {
+  it("keeps the personal locale namespaces aligned", () => {
+    expect(Object.keys(zh).sort()).toEqual(Object.keys(en).sort());
+  });
+  it("uses only owned works for recent works and labels illustrative artwork", async () => {
+    render(
+      <MemoryRouter>
+        <ProfileSettings app={makeApp()} />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("My real version")).toBeTruthy();
+    expect(screen.getByText(en.examples)).toBeTruthy();
+    expect(screen.getByText("owner@example.test")).toBeTruthy();
+    expect(screen.queryByText("36")).toBeNull();
+    expect(screen.queryByText("72")).toBeNull();
+  });
+  it("does not optimistically change preferences after a failed save", async () => {
+    const app = makeApp();
+    call.mockImplementation(async (path, options) => {
+      if (path === "/me/settings") {
+        if (options?.method === "PATCH") throw Error("offline");
+        return { locale: "en", default_remix_allowed: false };
+      }
+      if (path === "/me/works") return { items: [] };
+      return {
+        remaining: 1,
+        daily_limit: 2,
+        successful_today: 1,
+        enabled: false,
+      };
+    });
+    render(
+      <MemoryRouter>
+        <ProfileSettings app={app} />
+      </MemoryRouter>,
+    );
+    const toggle = await screen.findByRole("switch");
+    await waitFor(() =>
+      expect((toggle as HTMLInputElement).disabled).toBe(false),
+    );
+    fireEvent.click(toggle);
+    await waitFor(() =>
+      expect(app.setNotice).toHaveBeenCalledWith(en.saveError),
+    );
+    expect((toggle as HTMLInputElement).checked).toBe(false);
+  });
+  it("shows actual credit counts and no invented countdown or payment offer", async () => {
+    render(
+      <MemoryRouter>
+        <VideoBalance app={makeApp()} />
+      </MemoryRouter>,
+    );
+    const progress = await screen.findByRole("progressbar");
+    expect(progress.getAttribute("value")).toBe("1");
+    expect(progress.getAttribute("max")).toBe("2");
+    expect(screen.getByText(en.statusOff)).toBeTruthy();
+    fireEvent.click(screen.getByText(en.policy));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByText(en.policyBody)).toBeTruthy();
+    expect(post).not.toHaveBeenCalled();
+  });
+  it("shows balance errors rather than replacing an unknown balance with 2", async () => {
+    call.mockRejectedValue(Error("offline"));
+    render(
+      <MemoryRouter>
+        <VideoBalance app={makeApp()} />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.queryByRole("progressbar")).toBeNull();
+    expect(screen.getByText("—")).toBeTruthy();
+  });
+  it("plays the labeled design clip without creating a job or spending credits", async () => {
+    render(
+      <MemoryRouter>
+        <VideoStudio app={makeApp()} version={version} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByAltText(version.title).getAttribute("src")).toBe(
+      "/owned.jpg",
+    );
+    fireEvent.click(screen.getByRole("button", { name: en.custom }));
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "A slow turn" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: en.demo }));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.textContent).toContain(en.demoBody);
+    expect(dialog.querySelector("video")?.getAttribute("src")).toBe(
+      "/assets/cn12_cinematic_demo_5s_en.mp4",
+    );
+    expect(post).not.toHaveBeenCalled();
+    expect(
+      call.mock.calls.every(([path]) => path === "/me/video-credits"),
+    ).toBe(true);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});

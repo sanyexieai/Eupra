@@ -1,0 +1,21 @@
+[package]
+name = "eupra-api"
+version = "0.1.0"
+edition = "2021"
+[dependencies]
+axum = { version = "0.8", features = ["multipart"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.38", features = ["bundled"] }
+uuid = { version = "1", features = ["v4"] }
+argon2 = "0.5"
+rand_core = { version = "0.6", features = ["getrandom"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+sha2 = "0.10"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+base64 = "0.22"
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.6", features = ["fs"] }
+[dev-dependencies]
+http-body-util = "0.1"
