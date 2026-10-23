@@ -467,7 +467,12 @@ describe("persisted personal settings", () => {
       screen.getByRole("option", { name: "Trashed owned work" }),
     ).toBeTruthy();
     expect(screen.queryByRole("option", { name: "Foreign work" })).toBeNull();
-    expect(screen.getByLabelText(en.appealVersion)).toBeTruthy();
+    expect(
+      screen.getByLabelText(en.appealVersion, { exact: true }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("combobox", { name: en.appealVersion }),
+    ).toBeTruthy();
   });
   it("retries failed appeal work loading without falling back to recent works", async () => {
     const old = call.getMockImplementation()!;

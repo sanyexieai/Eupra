@@ -19,6 +19,8 @@ def passed(label):
 def reveal(page, chinese=False):
  page.get_by_role('button',name='看看发生了什么' if chinese else 'Reveal this version',exact=True).wait_for(timeout=20000)
  assert '/jobs/' in page.url, 'Success must remain in the theater until deliberate reveal'
+ language=page.locator('html').get_attribute('lang'); width=page.viewport_size['width']
+ page.screenshot(path=str(ART/f'CN-03-ready-{width}px-{language}-{MODE}.png'),full_page=True)
  page.get_by_role('button',name='看看发生了什么' if chinese else 'Reveal this version',exact=True).click()
  page.wait_for_url('**/result/**',timeout=20000)
 def ready(url):
@@ -109,6 +111,8 @@ try:
     passed('CN-04 one-action continuation creates immutable child with accurate parent and deliberate reveal')
     page.goto(BASE+'/result/'+root_id)
     page.get_by_role('button',name='Browse existing branches',exact=True).click()
+    page.locator('.inline-branches .version-strip button').first.wait_for()
+    page.screenshot(path=str(ART/'CN-04-expanded-branches-desktop-en-US-demo.png'),full_page=True)
     page.locator('.inline-branches .version-strip button').first.click()
     expect(page).to_have_url(BASE+'/result/'+child_id)
     page.get_by_role('link',name='Choose a direction and version',exact=True).click()
@@ -357,6 +361,7 @@ try:
    profile_editor.get_by_label('Nickname',exact=True).fill('Browser test creator')
    profile_editor.get_by_label('Bio',exact=True).fill('Synthetic private profile for regression checks.')
    profile_editor.get_by_label('Choose avatar image',exact=True).set_input_files(str(ROOT/'frontend/public/assets/demo-source.webp'))
+   page.screenshot(path=str(ART/('CN-11-profile-editor-mobile-en-US-'+MODE+'.png')),full_page=True)
    profile_editor.get_by_role('button',name='Save profile',exact=True).click()
    page.get_by_role('heading',name='Browser test creator',exact=True).wait_for()
    profile=page.request.get(BASE+'/api/v1/me/profile').json()
@@ -390,6 +395,7 @@ try:
     page.get_by_text('Motion idea saved for this work',exact=True).wait_for()
     page.reload()
     expect(page.get_by_role('textbox',name='Write your own motion',exact=True)).to_have_value('Synthetic saved camera movement.')
+    page.screenshot(path=str(ART/'CN-12-saved-motion-mobile-en-US-demo.png'),full_page=True)
     motion=page.request.get(BASE+'/api/v1/versions/'+root_id+'/motion-preference').json()
     assert motion['preset']=='custom' and motion['generation_enabled'] is False
     credits=page.request.get(BASE+'/api/v1/me/video-credits').json()

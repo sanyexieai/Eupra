@@ -77,13 +77,13 @@ Still outstanding: original-design parity, physical-device/cross-browser and add
 
 ## Current audit source fingerprints
 
-These SHA256 hashes anchor the frozen local source read for this 07:54 v0.5 inventory, after the navigation readiness fix. They do not replace exact CI commit provenance or establish browser/pixel acceptance. The previous 07:17 fingerprints are superseded for this inventory.
+These SHA256 hashes anchor the frozen local source read for this 08:14 v0.5 inventory, after the navigation readiness fix. They do not replace exact CI commit provenance or establish browser/pixel acceptance. The previous 07:17 fingerprints are superseded for this inventory.
 
 - frontend/src/App.tsx: `877c00dfbdd30da569d4c5bf43419f4d9cf44350ee78242753e8b8cdab8071b5`
 - frontend/src/main.tsx: `2cc73800cd18ce39e0ba327ddd4e3a1310daf1fe7f3249df39bd0af00837f8bc`
 - frontend/src/CreationPanels.tsx: `58917990729e0a3491157457d9681e27e028e87cfbe9b90b9c64290dcb3955f4`
 - frontend/src/VersionExplorer.tsx: `3173f2828133a8b6dedcf6ab1ec9bb32b56fb8b7d37a0861bcf757e38ccca869`
-- frontend/src/PersonalPanels.tsx: `a2ad91512a1759228644393ec135c31e6a0b95dc85d6ed373af22298fb270ebe`
+- frontend/src/PersonalPanels.tsx: `c29930addf3e0a487d572e2952dabe0f91499b5861048d7a1327b2c6175ab436`
 - frontend/src/LineageGraph.tsx: `babe41a2996cf0a6cee3a1e4a49d6e4467bb21134cb83e5b8c4718824b6eafa9`
 - frontend/src/ExportPanel.tsx: `0e747ef0f3a8c54df56a01a2a992a3427877ce1556c22691ae7c9efb462e1f72`
 - frontend/src/DraftLibrary.tsx: `d74b55ece4aa5331edb7449ac87e53c969343103a9202b4b58e3b24ed2c6ffed`
@@ -97,4 +97,4 @@ These SHA256 hashes anchor the frozen local source read for this 07:54 v0.5 inve
 - frontend/src/poster.ts: `addaafda5bdabbaf73b7961a9125dafa5283feb7d16f4fe6b7a4c54bc4456caf`
 - backend/API.md: `ea526116f83942ac8f0420db7d83d5ae3393f526b921309de2f0e8e3b76fe865`
 - backend/src/main.rs: `a520b92ec4b5a350b43a89e4349bbf6eab62d9930e41b5aea38cc0683ce437b6`
-- qa/browser_smoke.py: `fcf9f1f813fb9bc10b37522f3eaba5ec94b618491e067032465bc3e0646ba213`
+- qa/browser_smoke.py: `824966e586fa1d00fe5ce467d0e892e7a72954296c019732bc26ec9544d6b35c`

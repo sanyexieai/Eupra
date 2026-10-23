@@ -1237,6 +1237,7 @@ function AppealRecords({ app }: { app: AppContext }) {
               <label>
                 {t("appealVersion")}
                 <select
+                  aria-label={t("appealVersion")}
                   disabled={busy}
                   value={selected}
                   onChange={(e) => setSelected(e.target.value)}
