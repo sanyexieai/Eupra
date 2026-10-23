@@ -1,6 +1,18 @@
 # QA report — engineering checkpoints
 
-## Latest tested application revision: v0.5 CN functional loops
+## Latest tested application revision: v0.6 bounded original-design interactions
+
+Exact application `8abe12b4e4221e1f715b2729ae333f34d2b8ce51`, [run 39929895583](https://github.com/sanyexieai/Eupra/actions/runs/39929895583), succeeded on 2026-10-23 at 09:14 UTC. Passed 30 Rust tests, 114 component tests and production builds, API 5+27, five black-box security suites, 18 media provenance checks and 13 offline evaluation regressions. Real Chromium passed 43 demo + 21 unconfigured-service checks, with 89 standard bilingual desktop/mobile-viewport captures and 111 total PNG files.
+
+- The eight original-backed items in `docs/CN-NEXT-ACCEPTANCE.md` are closed within the combined source/component/API/browser scope: actual-source sheet, primary drafts tab/counts, detail drawer, selected-node maps/lineage/persistent action, original sample interaction, shared-original/own-child comparison and gated save/share handoff, truthful platform guidance, and valid-capability retry recovery.
+- Browser capability recovery used a real server-created job: cancel it before releasing its unchanged creation response, refresh the page, reopen a valid preview, navigate through creation/resume, and retry its persisted original request with the same parent. No response body or successful generation was fabricated.
+- Private source checks include owner/deleted ACLs, exact full input, private asset ownership, absent/ambiguous provenance and shared-parent ancestor secrecy. These are automated security regressions and source review, not a third-party audit.
+- Downloaded artifact 12490589713: 62,329,365 bytes, SHA256 `547bffbbef438d4c7887bb32e507b5c6458cfa7f4f4bd06aa82eca067eb21e36`. Extra screenshots include source/draft/detail/lineage/example sheets and actual own-child comparison; standard capture count remains 89.
+- No new artwork was fabricated or substituted: 16 original media files and two documented compatibility derivatives remain. Actual new personal images/video, independent output review, export/publication, guest policy, staff appeals, production operations and GLOBAL remain separate gates. New modal captures are primarily desktop English; full Chinese/mobile modal-state coverage and physical devices are not claimed.
+- Earlier 2274042/run39927766385 passed 42+21 browser checks but final audit found the specified CN09 persistent CTA absent; it certified seven bundles plus partial item 4, not all eight. The narrow 914bea correction passed its actual mobile hit-test and exact-parent flow, but a later old checkbox harness assumed synchronous UI updates. The 8abe12b harness now clicks and awaits server-confirmed state, retaining API and reload assertions. The entire final run passed. No failed run is counted as acceptance.
+- Vite reports a non-failing 504 kB entry-chunk advisory (about 163 kB gzip). Mobile performance benchmarking and bundle optimization remain unverified.
+
+## Previous tested application revision: v0.5 CN functional loops
 
 Exact tested application `18d03563845ea67f6506c48843baa58db2463a1b`, [run 39924248871](https://github.com/sanyexieai/Eupra/actions/runs/39924248871), succeeded on 2026-10-23 at 08:27 UTC: 28 Rust, 91 component tests/build, API 5 unavailable + 27 demo checks, four security suites, 18-asset provenance and 13 offline evaluation regressions. Real Chromium passed 35 demo + 20 unconfigured-service checks, with 89 standard Chinese/English desktop/mobile-viewport captures and additional intermediate/poster images (103 PNG files total).
 
@@ -139,10 +151,12 @@ Following browser runs verified direct continuation, branch return, retained wor
 
 The later successful 18d0356 run above supersedes these pending v0.5 statuses; failed intermediate runs remain failures.
 
-## Pending v0.6 original-design interaction increment
+## Historical pre-CI v0.6 verification
 
 The finite checklist in `docs/CN-NEXT-ACCEPTANCE.md` governs exactly eight additional original-backed behaviors: actual source sheet, primary drafts tab, work drawer, selected-node growth/lineage actions, original example navigation, actual own-child comparison/save-share handoff, truthful platform guidance and valid-capability retry recovery. Source and component changes are implemented; exact-head browser acceptance is still pending.
 
-Local checks pass: 30 Rust tests; 112 component tests and production build; API 5+27; provider/local-share/private-assets/personal/source security scripts; 18 asset manifest checks; 13 offline evaluation tests. Private source retrieval returns only this version’s exact submitted input, never ancestors’ inputs. Capability recovery is held only in this tab’s memory, binds the server-provided parent, and clears on account change. Reopening a valid preview can restore that bounded context after refresh. No personal export/public-profile/guest generation authorization has been added.
+Local checks pass: 30 Rust tests; 114 component tests and production build; API 5+27; provider/local-share/private-assets/personal/source security scripts; 18 asset manifest checks; 13 offline evaluation tests. Private source retrieval returns only this version’s exact submitted input, never ancestors’ inputs. Capability recovery is held only in this tab’s memory, binds the server-provided parent, and clears on account change. Reopening a valid preview can restore that bounded context after refresh. No personal export/public-profile/guest generation authorization has been added.
 
 The accepted v0.5 result above remains historical and must not be transferred to these changes before a successful new run. No new artwork or fake generated output is used.
+
+The successful 8abe12b checkpoint above supersedes the historical pending v0.6 status. Later documentation changes do not change the accepted application code.

@@ -1,18 +1,28 @@
-# Next CN increment: finite acceptance checklist
+# Finite CN increment: acceptance record
 
-Scope frozen: 2026-10-23 08:41 UTC. Baseline application: `18d03563845ea67f6506c48843baa58db2463a1b`; baseline documentation: `c487e18`. This is a prospective eight-item implementation/acceptance plan, not a claim that these items have passed. Existing checkpoint documents remain unchanged.
+Scope frozen: 2026-10-23 08:41 UTC. Baseline application: `18d03563845ea67f6506c48843baa58db2463a1b`; baseline documentation: `c487e18`. Acceptance reconciliation frozen: 2026-10-23 09:16 UTC. Original criteria remain below; status/evidence distinguish implemented/tested behavior from remaining qualification.
 
 Only the eight original-backed bundles below are in scope. They use owned assets, existing local-demo capability sharing and actual persisted jobs. They do not require a live model, public publication, public profile exposure or production export approval. References use the exact original-file index at the end; line numbers refer to those supplied Markdown files.
 
+
+## Exact acceptance evidence
+
+Exact application `8abe12b4e4221e1f715b2729ae333f34d2b8ce51`, [run 39929895583](https://github.com/sanyexieai/Eupra/actions/runs/39929895583) passed 30 Rust tests, 114 UI component tests/build and 43 demo + 21 unavailable-service real Chromium checks. The downloaded reports independently contain 61 + 28 standard Chinese/English desktop/mobile captures (89 standard captures); the artifact directory contains 111 PNGs including intermediate/poster images. Browser reports were read from `eupra-product-deliverables/ci-8abe12b/`. This reconciliation inspected source/contracts and test records; it did not launch another browser or visually certify all images. All eight bundles are accepted within the combined tested scope, including the dedicated CN09 mobile persistent-action check. The bullet criteria are the frozen scope, not a claim that every permutation was exercised on every locale/device.
+
+
+**Historical qualification:** `2274042e4eb21dd71b2d7b8047e7ebd1f2744603`, [run 39927766385](https://github.com/sanyexieai/Eupra/actions/runs/39927766385), passed 30 Rust/112 UI and 42 demo + 21 unavailable browser checks, with 89 standard captures/110 PNGs. At that checkpoint, seven bundles were accepted and item 4 still lacked CN09's persistent CTA. The later `8abe12b` correction and its own evidence close that exception; the earlier result is not retroactively upgraded.
+
 ## 1. CN04 actual-source sheet
+
+**Status: Accepted within tested scope.** `SourceSheet` uses the owner-only exact-input API. Browser check confirms full submitted text and close without version change; component/source-security tests cover absence, denied access, focus restoration and no ancestor/example substitution.
 
 **Original:** P04 §3 item 4, §4 and §10, lines 43, 66 and 171.
 
-**Actual gap:** `Result` expands an inline source image instead of opening the specified closable source sheet.
+**Baseline gap (before this increment):** `Result` expands an inline source image instead of opening the specified closable source sheet.
 
 **Bounded implementation:** Show only the current work's authorized actual source in a sheet. Preserve the selected result when the sheet closes. A missing, inaccessible or unavailable source must not become example artwork or another creator's source.
 
-**Acceptance:**
+**Frozen acceptance criteria:**
 - Open a work with an owned source and verify the sheet displays that source, not the result asset or a bundled example.
 - Close/reopen without changing the current version or its lineage.
 - Missing/denied source has an honest state; foreign source content is never returned or displayed.
@@ -20,13 +30,15 @@ Only the eight original-backed bundles below are in scope. They use owned assets
 
 ## 2. CN08 first-class Draft tab
 
+**Status: Accepted within tested scope.** `WorksPanel` exposes primary Draft classification/counts. Browser checks cover primary drafts, persisted resume and delete/restore; component tests cover separate counts, retained filter and draft-search empty state.
+
 **Original:** P08 §02 and §05 items 3/10/12, lines 21, 73 and 80–82.
 
-**Actual gap:** Durable drafts exist in a separate expandable management panel, not the library's primary classification.
+**Baseline gap (before this increment):** Durable drafts exist in a separate expandable management panel, not the library's primary classification.
 
 **Bounded implementation:** Expose All/Original/Remix/Draft in the primary library classification, reusing existing draft persistence and recoverable deletion. Existing optional Favorites/Trash controls need not be removed.
 
-**Acceptance:**
+**Frozen acceptance criteria:**
 - Switch the four required classifications; active drafts appear only in Draft and never inflate completed-work counts.
 - Counts and visible items update after confirmed draft deletion; cancelling confirmation changes nothing.
 - Resume a saved photo/text draft with its full persisted input and correct parent.
@@ -34,13 +46,15 @@ Only the eight original-backed bundles below are in scope. They use owned assets
 
 ## 3. CN08 work-detail and continuation drawer
 
+**Status: Accepted within tested scope.** Actual-work drawer has synchronized favorite and exact-work sharing/lineage/continuation links. Browser check confirms drawer/library context and gated sharing; component tests cover dismissal/focus, selected IDs and failed favorite persistence. Direction entry reuses the existing exact-parent remix route, not simulated generation.
+
 **Original:** P08 §02, §04 and §05 items 5–9, lines 22–24, 46 and 75–79.
 
-**Actual gap:** Work cards navigate away instead of opening the prescribed drawer with source relationship and actions.
+**Baseline gap (before this increment):** Work cards navigate away instead of opening the prescribed drawer with source relationship and actions.
 
 **Bounded implementation:** Open the selected work in a bottom drawer with actual image/text, parent relationship, favorite, existing CN06 sharing handoff, lineage and direction/continuation entry. Reuse existing jobs and immutable versions rather than inserting fabricated results.
 
-**Acceptance:**
+**Frozen acceptance criteria:**
 - Opening two different cards shows their respective work IDs/content and correct parent relationships.
 - Favorite changes synchronize with the corresponding card; share targets that work's CN06 route.
 - Lineage and continuation retain the selected historical parent; a chosen direction creates an actual local-demo job and does not overwrite the parent.
@@ -48,13 +62,15 @@ Only the eight original-backed bundles below are in scope. They use owned assets
 
 ## 4. Selected-node growth maps, lineage sheet and persistent actions
 
+**Status: Accepted within tested scope.** CN05/CN09 maps, CN10 ancestry sheet and fixed exact-node continuation are implemented. Final `8abe12b` also renders CN09's persistent dock with the genuine shared continuation handler. Its dedicated mobile browser check verifies hit-test accessibility and actual generation from the selected detail version; two component regressions verify selected child rather than source parent and fail-closed unavailable provider. Branching/private-node and ancestry-selection tests remain in the suite. No physical-device or exhaustive cyclic-input browser pass is claimed.
+
 **Original:** P05 §2, line 11; P09 §2.2/§2.4 and §4.1, lines 11–21 and 33–35; P10 §3 paths B/C and §5, lines 44–59 and 104–107.
 
-**Actual gaps:** CN05 has a strip/link rather than its lightweight growth map. CN09's graph covers ancestors rather than the available branch graph. CN10 lacks the lineage sheet. CN09/CN10 lack the specified persistent CTA, and CN10's continuation still opens another submit screen.
+**Baseline gaps (before this increment):** CN05 has a strip/link rather than its lightweight growth map. CN09's graph covers ancestors rather than the available branch graph. CN10 lacks the lineage sheet. CN09/CN10 lack the specified persistent CTA, and CN10's continuation still opens another submit screen.
 
 **Bounded implementation:** Reuse actual authorized world/lineage records for the CN05/CN09 maps and CN10 source-to-current sheet. Provide persistent exact-node continuation in CN09/CN10. No public graph, new author data or generated candidate batch is included.
 
-**Acceptance:**
+**Frozen acceptance criteria:**
 - A branched fixture displays real parent-child edges; selecting a historical node updates its visual, text and selection consistently.
 - CN10 opens the selected node's ancestry chain; selecting a chain entry returns to that historical node.
 - Continuing from an older node creates a job with precisely that `parent_version_id`, never the newest node by position.
@@ -63,13 +79,15 @@ Only the eight original-backed bundles below are in scope. They use owned assets
 
 ## 5. WEB original/sample story interaction
 
+**Status: Accepted within tested scope.** Browser checks in demo and unavailable modes verify actual sample source plus three labeled supplied examples without personal-work creation; genuine example PNG download is rerun. Component tests also assert no generation request.
+
 **Original:** PW §2 Story Showcase and §4, lines 24 and 49–52.
 
-**Actual gaps:** The original-source card opens the CEO result. Example continuation only alternates CEO/moon rather than the supplied additional example sequence.
+**Baseline gaps (before this increment):** The original-source card opens the CEO result. Example continuation only alternates CEO/moon rather than the supplied additional example sequence.
 
 **Bounded implementation:** Make the original card present/select the actual sample source and complete the supplied example-story sequence. Keep the existing working example download. This is explicitly a packaged demonstration, not personal generation.
 
-**Acceptance:**
+**Frozen acceptance criteria:**
 - Original-source interaction shows/selects the supplied source rather than misrouting to a finished CEO result.
 - Example continuation changes the selected supplied example, image and corresponding text through the intended sequence, including the additional supplied example.
 - Example labels remain visible in both languages; these interactions create no private generation job, no generated asset claim and no quota spend.
@@ -77,13 +95,15 @@ Only the eight original-backed bundles below are in scope. They use owned assets
 
 ## 6. CN07 original/own-version comparison and onward sharing
 
+**Status: Accepted within tested scope.** `SharedPreview` compares only actual owned exact-parent children and routes the chosen child to gated export; browser check exercises that loop. Component/security checks cover no invented child, anonymous access boundaries, revoked preview and failed owned-list read. No private profile publication is added.
+
 **Original:** P07 §2.3/§2.4 and §3, lines 18–24 and 30–31. Traceability: P04 §6, line 128.
 
-**Actual gaps:** Original/your-version comparison, save/share handoff and fixed CTA are absent.
+**Baseline gaps (before this increment):** Original/your-version comparison, save/share handoff and fixed CTA are absent.
 
 **Bounded implementation:** For the existing signed-in local-demo continuation, compare the permission-bearing shared version with the recipient's actually completed child. Preserve exact root/parent and already-permitted creator IDs. Save/share targets the owned child through existing CN06. Do not publish private nickname/avatar fields or implement anonymous generation.
 
-**Acceptance:**
+**Frozen acceptance criteria:**
 - Before a child succeeds, no fabricated "your version" or success message appears.
 - After a real local-demo job succeeds, comparison uses the exact shared parent and actual owned child; their identities are not reversed or replaced by examples.
 - Save and re-share hand off the child ID, respecting existing local-preview consent and production-export denial.
@@ -92,13 +112,15 @@ Only the eight original-backed bundles below are in scope. They use owned assets
 
 ## 7. CN06 truthful platform-sharing guidance
 
+**Status: Accepted within tested scope.** Browser check confirms platform instructions and blocked-export explanation. Export component tests cover native-share cancellation, clipboard/manual fallback, held real output and allowed-only/no-delivery denial; no external platform posting is claimed.
+
 **Original:** P06 §3.3, lines 20–22; P04 §6, lines 124–127.
 
-**Actual gap:** No platform-aware SDK-or-manual guidance is provided.
+**Baseline gap (before this increment):** No platform-aware SDK-or-manual guidance is provided.
 
 **Bounded implementation:** Provide localized guidance for supported native/manual sharing. No platform SDK integration, external posting or new public-sharing capability is required. Personal export remains unavailable until its genuine prerequisites exist.
 
-**Acceptance:**
+**Frozen acceptance criteria:**
 - Native sharing availability, unsupported environment, cancellation and failure produce accurate feedback, not an invented platform-post success.
 - Manual guidance explains only actions actually available for the current content/scope.
 - Blocked personal export explains the unavailable prerequisite rather than instructing the user to save a nonexistent poster.
@@ -106,13 +128,15 @@ Only the eight original-backed bundles below are in scope. They use owned assets
 
 ## 8. CN03 shared-parent retry recovery
 
+**Status: Accepted within tested scope.** Browser check cancels a real shared continuation and retries with valid in-memory capability/exact parent. Component tests cover memory lifetime, account clearing and exact-parent context recovery after reopening a preview. Existing backend authorization/idempotency checks remain authoritative; the browser record does not claim every expired/mismatched variation was rerun on each device.
+
 **Original:** P03 §3 error/timeout and §5 retry contract, lines 45–50 and 90–93.
 
-**Actual gap:** Frontend retry always sends `{}` while the backend correctly requires a fresh valid capability for shared-parent requests.
+**Baseline gap (before this increment):** Frontend retry always sends `{}` while the backend correctly requires a fresh valid capability for shared-parent requests.
 
 **Bounded implementation:** Provide a way to regain valid share context and retry the exact persisted original request with a new idempotency key. Reuse the existing backend capability checks and source-preserving retry contract; do not reconstruct input from the display excerpt.
 
-**Acceptance:**
+**Frozen acceptance criteria:**
 - A failed/cancelled shared-parent job retries successfully with a currently valid matching capability and retains full original input/exact parent.
 - Missing, revoked, expired or mismatched capabilities fail safely; no replacement parent or success is invented.
 - Duplicate submission uses the existing idempotency behavior and does not produce duplicate jobs.
@@ -129,9 +153,9 @@ Only the eight original-backed bundles below are in scope. They use owned assets
 
 ## Verification and stopping condition
 
-Finish these eight bundles, then run focused component/API/security regressions and an exact-head real-browser pass covering their positive, denied and interrupted flows in Chinese/English desktop/mobile viewports. Actual screenshot review is separate from functional checks. Do not borrow the baseline CI result for changed application code.
+The final exact-head run supplies combined component/API/security and real-browser evidence for all eight bundles, including the formerly missing CN09 persistent CTA. The finite checklist is closed. Do not reopen it for optional refinements or transfer this acceptance to later application changes.
 
-Stop when the eight bundles pass and all excluded/gated behavior remains truthful. This does not certify complete design parity, all 20 pages or production readiness. No merge, deployment or public release is part of this checklist.
+Physical-device/cross-browser testing and full original-design pixel parity remain unaccepted, as do the separately excluded service/policy gates. No production approval, personal export authorization, public profile publication, merge, deployment or release is implied.
 
 ## Exact original-file index
 
