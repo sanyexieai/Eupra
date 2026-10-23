@@ -15,6 +15,7 @@ import {
   createContext,
   useContext,
   useRef,
+  useCallback,
   type ReactNode,
 } from "react";
 import {
@@ -138,6 +139,66 @@ export default function App() {
   const t = (k: Key) => (locale === "zh-CN" ? zh : en)[k] || k;
   const navigate = useNavigate();
   const location = useLocation();
+  // Keep the blocker mounted across routes. Its registered callback never captures
+  // an old job status; pending/unknown jobs remain guarded until a terminal reply.
+  const jobGuard = useRef<{ id: string; status: string | null }>({
+    id: "",
+    status: null,
+  });
+  const [guardVersion, setGuardVersion] = useState(0);
+  const reportJobState = (id: string, status: string | null) => {
+    jobGuard.current = { id, status };
+    setGuardVersion((v) => v + 1);
+  };
+  const shouldBlockJobLeave = useCallback(
+    ({
+      currentLocation,
+      nextLocation,
+    }: {
+      currentLocation: { pathname: string };
+      nextLocation: { pathname: string };
+    }) => {
+      if (
+        !currentLocation.pathname.startsWith("/jobs/") ||
+        currentLocation.pathname === nextLocation.pathname
+      )
+        return false;
+      const id = currentLocation.pathname.slice("/jobs/".length);
+      return (
+        jobGuard.current.id !== id ||
+        !["succeeded", "failed", "cancelled"].includes(
+          jobGuard.current.status || "",
+        )
+      );
+    },
+    [],
+  );
+  const jobBlocker = useBlocker(shouldBlockJobLeave);
+  useEffect(() => {
+    if (jobBlocker.state !== "blocked") return;
+    const id = location.pathname.slice("/jobs/".length);
+    const known =
+      jobGuard.current.id === id && jobGuard.current.status !== null;
+    if (window.confirm(t(known ? "leaveJobConfirm" : "leaveUnknownJobConfirm")))
+      jobBlocker.proceed();
+    else jobBlocker.reset();
+  }, [jobBlocker, locale, location.pathname]);
+  useEffect(() => {
+    if (
+      !shouldBlockJobLeave({
+        currentLocation: location,
+        nextLocation: { pathname: "" },
+      })
+    )
+      return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [location.pathname, guardVersion, shouldBlockJobLeave]);
+
   const localeChoice = useRef(0);
   const hydratedAccount = useRef<string | null>(null);
   const preserveRegistrationLocale = useRef(false);
@@ -260,6 +321,7 @@ export default function App() {
         setDraft,
         error,
         navigate,
+        reportJobState,
       }}
     >
       <div
@@ -1077,35 +1139,16 @@ function Missing() {
 }
 function JobPage() {
   const { id } = useParams();
-  const { t, navigate, error, locale } = useApp();
+  const { t, navigate, error, locale, reportJobState } = useApp();
   const [job, setJob] = useState<Job | null>(null);
   const [failed, setFailed] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [pollEpoch, setPollEpoch] = useState(0);
-  const activeJob = !!job && ["queued", "running"].includes(job.status);
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      activeJob && currentLocation.pathname !== nextLocation.pathname,
-  );
-  useEffect(() => {
-    if (blocker.state === "blocked") {
-      if (window.confirm(t("leaveJobConfirm"))) blocker.proceed();
-      else blocker.reset();
-    }
-  }, [blocker, locale]);
-  useEffect(() => {
-    if (!activeJob) return;
-    const warn = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [activeJob]);
   useEffect(() => {
     let active = true;
     let terminal = false;
+    reportJobState(id!, null);
     setJob(null);
     setFailed(false);
     const poll = async () => {
@@ -1113,6 +1156,7 @@ function JobPage() {
       try {
         const j = await api<Job>("/generation-jobs/" + id);
         if (!active) return;
+        reportJobState(id!, j.status);
         setJob(j);
         setFailed(false);
         terminal = ["succeeded", "failed", "cancelled"].includes(j.status);
@@ -1210,7 +1254,11 @@ function JobPage() {
               if (cancelling || !window.confirm(t("cancelConfirm"))) return;
               setCancelling(true);
               try {
-                setJob(await post("/generation-jobs/" + id + "/cancel"));
+                const cancelled = await post<Job>(
+                  "/generation-jobs/" + id + "/cancel",
+                );
+                reportJobState(id!, cancelled.status);
+                setJob(cancelled);
               } catch (e) {
                 error(e);
               } finally {

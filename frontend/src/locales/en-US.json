@@ -239,5 +239,6 @@
   "browseBranches": "Browse existing branches",
   "noBranches": "No existing child versions yet. Continue this version to start a branch.",
   "returnSelected": "Return to selected result",
-  "yourStoryWorlds": "Your private story worlds"
+  "yourStoryWorlds": "Your private story worlds",
+  "leaveUnknownJobConfirm": "Leave before task status is known? The task may still be running. You can return to check it."
 }

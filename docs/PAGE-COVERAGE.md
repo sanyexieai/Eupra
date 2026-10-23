@@ -71,15 +71,15 @@ Remaining independent CN work is concentrated in four groups:
 
 **Accepted final v0.4 refinement:** `aeb203ccd8ae05a06dcb58e6ac7ccdebd3d5e3c8`, [run 39916874949](https://github.com/sanyexieai/Eupra/actions/runs/39916874949), 2026-10-23 07:22 UTC. Passed 24 Rust, 69 UI, API 5+27, provider/local-share/private-asset security, 18-asset provenance and 13 offline regressions; 29 demo + 19 unavailable real-browser checks with 61 + 28 bilingual captures. This includes pale route chrome, website-only footer, settings navigation and mobile WEB ordering, resolving their previous pending labels. Artifact 12485641629 is 48,233,238 bytes, SHA256 `16b2abed3feb01760e2f9705dcaafaa338f29b4a6a8905c9eb4f1d6902a5fa3e`. Actual pixel review is separate in `qa/DESIGN-FIDELITY.md`.
 
-**New v0.5 local-only increment:** backend 28 Rust tests and frontend 88 UI tests/build are reported passing at the 07:43 consolidated freeze (39 App, 21 Personal and 28 other component tests). Active-job Back/Forward, explicit reveal/timeout, exact-parent continuation/children, retained search, account-wide/profile/preference/appeal and motion/reset behavior are source/component-test evidence, not yet an accepted exact-head browser run. This audit reads code/API/QA records; it does not rerun CI or certify new pixels. The v0.4 pass above must not be transferred to v0.5.
+**New v0.5 local-only increment:** backend 28 Rust tests and frontend 89 UI tests/build pass after the CI-found blocker-registration race fix (40 App, 21 Personal and 28 other component tests); Node22 also passed20 repeated focused history/pending-status runs. Active-job Back/Forward, explicit reveal/timeout, exact-parent continuation/children, retained search, account-wide/profile/preference/appeal and motion/reset behavior are source/component-test evidence, not yet an accepted exact-head browser run. This audit reads code/API/QA records; it does not rerun CI or certify new pixels. The v0.4 pass above must not be transferred to v0.5.
 
 Still outstanding: original-design parity, physical-device/cross-browser and additional viewport testing, fully integrated sheet/navigation behavior, genuine image/video quality and independent safety, authorized personal artifact export, production public sharing, commerce and deployment. GLOBAL is intentionally deferred. The assessment remains 14 partial core pages and six unimplemented GLOBAL pages.
 
 ## Current audit source fingerprints
 
-These SHA256 hashes anchor the frozen local source read for this 07:43 v0.5 inventory, after the integrated frontend freeze. They do not replace exact CI commit provenance or establish browser/pixel acceptance. The previous 07:17 fingerprints are superseded for this inventory.
+These SHA256 hashes anchor the frozen local source read for this 07:54 v0.5 inventory, after the navigation readiness fix. They do not replace exact CI commit provenance or establish browser/pixel acceptance. The previous 07:17 fingerprints are superseded for this inventory.
 
-- frontend/src/App.tsx: `e3f8b1dd0b7c992e40a52b68e365253c33deba55f842568a4d76d43e7527a394`
+- frontend/src/App.tsx: `877c00dfbdd30da569d4c5bf43419f4d9cf44350ee78242753e8b8cdab8071b5`
 - frontend/src/main.tsx: `2cc73800cd18ce39e0ba327ddd4e3a1310daf1fe7f3249df39bd0af00837f8bc`
 - frontend/src/CreationPanels.tsx: `58917990729e0a3491157457d9681e27e028e87cfbe9b90b9c64290dcb3955f4`
 - frontend/src/VersionExplorer.tsx: `3173f2828133a8b6dedcf6ab1ec9bb32b56fb8b7d37a0861bcf757e38ccca869`
@@ -97,4 +97,4 @@ These SHA256 hashes anchor the frozen local source read for this 07:43 v0.5 inve
 - frontend/src/poster.ts: `addaafda5bdabbaf73b7961a9125dafa5283feb7d16f4fe6b7a4c54bc4456caf`
 - backend/API.md: `ea526116f83942ac8f0420db7d83d5ae3393f526b921309de2f0e8e3b76fe865`
 - backend/src/main.rs: `a520b92ec4b5a350b43a89e4349bbf6eab62d9930e41b5aea38cc0683ce437b6`
-- qa/browser_smoke.py: `3ba92be163774da0918c8df83dcc3f6e41ef71e36c3539a813c808ec62da1e07`
+- qa/browser_smoke.py: `fcf9f1f813fb9bc10b37522f3eaba5ec94b618491e067032465bc3e0646ba213`

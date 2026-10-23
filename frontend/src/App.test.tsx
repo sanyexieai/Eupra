@@ -985,4 +985,47 @@ describe("unified application integration", () => {
       call.mock.calls.filter(([p, o]) => p === "/me/settings" && !o).length,
     ).toBe(0);
   });
+  it("guards unknown pending jobs immediately and releases only on a terminal response", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    let finish!: (value: any) => void;
+    call.mockImplementation(async (path) => {
+      if (path === "/config") return cfg;
+      if (path === "/auth/me") throw Error("guest");
+      if (path === "/generation-jobs/j1")
+        return new Promise((resolve) => {
+          finish = resolve;
+        });
+      if (path === "/versions/v1") return version;
+      throw Error(path);
+    });
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    mount("", ["/works", "/jobs/j1"]);
+    fireEvent.click(screen.getByRole("button", { name: "Test browser back" }));
+    await waitFor(() =>
+      expect(confirm).toHaveBeenCalledWith(
+        "Leave before task status is known? The task may still be running. You can return to check it.",
+      ),
+    );
+    expect(document.querySelector(".job-page")).not.toBeNull();
+    const unload = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(unload);
+    expect(unload.defaultPrevented).toBe(true);
+    confirm.mockClear();
+    finish({
+      id: "j1",
+      status: "succeeded",
+      stage: "DRAFT",
+      version_id: "v1",
+      demo: true,
+      error: null,
+    });
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reveal this version" }),
+    );
+    await waitFor(() =>
+      expect(document.querySelector(".result-page")).not.toBeNull(),
+    );
+    expect(confirm).not.toHaveBeenCalled();
+    confirm.mockRestore();
+  });
 });

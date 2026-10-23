@@ -45,4 +45,4 @@ Active jobs now guard in-app history/navigation and browser unload; successful j
 
 Private profile editing stores bounded nickname/bio and an owner-only normalized avatar. Settings reconcile the account locale and persist explicit changes. Notification preference is storage only, not a subscription. Appeals are actual private local records marked pending_local with staff processing disabled; they never change safety/export. Motion ideas persist separately per owned active version without modifying immutable artwork or spending credits. Balance displays actual disabled-service availability and UTC policy reset metadata, not a promise of future video access.
 
-28 Rust tests, 88 UI tests/build and four independent security suites pass locally. Updated real-browser checks are prepared but have not yet run for this increment. The preceding aeb203 application result does not certify this new code.
+28 Rust tests, 89 UI tests/build and four independent security suites pass locally. Updated real-browser checks are prepared but have not yet run for this increment. The preceding aeb203 application result does not certify this new code.

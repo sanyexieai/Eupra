@@ -239,5 +239,6 @@
   "browseBranches": "浏览已有分支",
   "noBranches": "还没有已有子版本，继续创作即可开启一条新分支。",
   "returnSelected": "返回所选结果",
-  "yourStoryWorlds": "你的私人故事世界"
+  "yourStoryWorlds": "你的私人故事世界",
+  "leaveUnknownJobConfirm": "任务状态尚未确认，确定离开？任务可能仍在进行，你可以稍后返回查看。"
 }
