@@ -209,7 +209,7 @@ try:
     before_credits=page.request.get(BASE+'/api/v1/me/video-credits').json()
     page.goto(BASE+'/video/'+root_id)
     page.get_by_role('button',name='Watch the local design demo',exact=True).click()
-    demo_player=page.get_by_label('Local 5-second design demo',exact=True)
+    demo_player=page.locator('video[aria-label="Local 5-second design demo"]')
     page.get_by_role('button',name='Play design demo',exact=True).click()
     page.wait_for_function('el => el.currentTime > 0.1',arg=demo_player.element_handle())
     demo_player.evaluate('el=>el.pause()')
