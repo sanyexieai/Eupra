@@ -82,6 +82,16 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 describe("poster preview and share boundaries", () => {
+  it("describes the unconfigured production gate without inventing a pending review", () => {
+    mount();
+    expect(screen.getByText(en.shareHold).textContent).toContain(
+      "not configured",
+    );
+    expect(screen.getByText(en.shareHold).textContent).toContain(
+      "no moderation job is running",
+    );
+    expect(en.hold).not.toContain("pending");
+  });
   it("keeps locales aligned and all personal export disabled", () => {
     expect(Object.keys(zh).sort()).toEqual(Object.keys(copy).sort());
     mount();

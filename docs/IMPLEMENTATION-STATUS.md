@@ -12,7 +12,7 @@ This is a working local product implementation, not full production MVP acceptan
 - Durable idempotent asynchronous jobs; cancellation, terminal failure, startup interruption recovery, owner isolation and rechecked remix permissions.
 - Immutable lineage and safe contributor attribution. Revoked/foreign ancestors expose only redacted relationship references, not source inputs or private world memory.
 - Configurable complete-engine HTTP adapter and optional staged orchestration. Reality parsing, possibility mining, 12–24 seeds, diversity, judging/ranking, expansion, tournament, visual direction, media, final judgment and safety are typed boundaries. Local mocks verify orchestration, not intelligence.
-- Loopback-only opt-in local review of OWN demo text, hashed expiring/revocable share capabilities and authenticated exact-parent continuation. Public preview DTO excludes original source/private memory. Production `HOLD` is unchanged; real/image outputs cannot use this exception.
+- Loopback-only opt-in local review of OWN demo text, hashed expiring/revocable share capabilities and authenticated exact-parent continuation. Public preview DTO excludes original source/private memory. Production `HOLD` means not cleared for publication, not a queued moderation job. Production review/publishing are unconfigured; real/image outputs cannot use this exception.
 - Light 4:5 personal poster preview with ALL personal PNG export disabled; optional system-sharing/clipboard only for a server-issued permitted preview link.
 - Official-design example poster export, clearly distinguished from private generated output. Private exports remain gated.
 - Optional same-origin static frontend serving; unknown API routes never fall back to HTML.
