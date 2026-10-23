@@ -27,7 +27,7 @@ This is a working local product implementation, not full production MVP acceptan
 - No email verification/password recovery, staff moderation interface or comprehensive production abuse defenses.
 - SQLite/in-process queue/private local files remain development choices, not production Postgres/Redis/object storage.
 - No completed model-quality experiment. 56 evaluation cases still require authorized real photos; no human blind review or retention experiment.
-- Local Chromium launch remains blocked. Authorized GitHub CI passed exact commit `4ac763c494e604b684644d58d0966e26e10fa19e`, run 39915775683: 24 Rust, 64 component and 29+19 real-browser checks, 89 bilingual desktop/mobile-viewport captures. Later chrome refinements have 69 local component tests but require their own CI. No physical-device, cross-browser or pixel-perfect parity claim. See `qa/QA-REPORT.md` and `qa/DESIGN-FIDELITY.md`.
+- Local Chromium launch remains blocked. Authorized GitHub CI passed exact commit `aeb203ccd8ae05a06dcb58e6ac7ccdebd3d5e3c8`, run 39916874949: 24 Rust, 69 component and 29+19 real-browser checks, 89 bilingual desktop/mobile-viewport captures. Final chrome refinements are included in that exact tested application revision. No physical-device, cross-browser or pixel-perfect parity claim. See `qa/QA-REPORT.md` and `qa/DESIGN-FIDELITY.md`.
 
 ## Repository and test provenance
 
@@ -37,4 +37,12 @@ Development publication is limited to the user-specified repository's working br
 
 Private creation drafts now persist full text and private source references with optimistic revision checks, owner-only reads and recoverable trash. Works can be moved to trash/restored without rewriting immutable lineage; deletion revokes preview links and suppresses pending child commits. Old capabilities are not revived by restore. A server-owned retry endpoint reuses the complete original input only for failed/cancelled jobs and rechecks all permissions. Export permission is an explicit owner-only fail-closed contract, not a review queue.
 
-Frontend adds actual welcome file/camera handoff, saved-draft resume, trash/restore management, confirmed cancellation, honest terminal state, source-preserving retry, current-work video/quota navigation and privacy-preserving unavailable-share messages. These functional loops passed the exact v0.4 browser run above. Original-asset layout is compared page by page in `qa/DESIGN-FIDELITY.md`. Later pale route chrome/mobile WEB refinements remain locally tested only until their separate exact-head CI completes.
+Frontend adds actual welcome file/camera handoff, saved-draft resume, trash/restore management, confirmed cancellation, honest terminal state, source-preserving retry, current-work video/quota navigation and privacy-preserving unavailable-share messages. These functional loops passed the exact v0.4 browser run above. Original-asset layout is compared page by page in `qa/DESIGN-FIDELITY.md`. Pale route chrome/mobile WEB refinements passed the subsequent exact application CI aeb203, as recorded above.
+
+## Next CN functional increment (local verification, CI pending)
+
+Active jobs now guard in-app history/navigation and browser unload; successful jobs wait for deliberate reveal. Results offer a direct exact-parent continuation, real existing-child browsing and return to the selected result. Library query/filter/sort survive reload and include world-name search plus direct graph navigation. Creator overview uses owned account-wide data rather than a fabricated one-world count.
+
+Private profile editing stores bounded nickname/bio and an owner-only normalized avatar. Settings reconcile the account locale and persist explicit changes. Notification preference is storage only, not a subscription. Appeals are actual private local records marked pending_local with staff processing disabled; they never change safety/export. Motion ideas persist separately per owned active version without modifying immutable artwork or spending credits. Balance displays actual disabled-service availability and UTC policy reset metadata, not a promise of future video access.
+
+28 Rust tests, 88 UI tests/build and four independent security suites pass locally. Updated real-browser checks are prepared but have not yet run for this increment. The preceding aeb203 application result does not certify this new code.

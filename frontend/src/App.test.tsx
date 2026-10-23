@@ -1,3 +1,4 @@
+import { transferableAbortController } from "node:util";
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import {
   render,
@@ -7,7 +8,11 @@ import {
   cleanup,
   within,
 } from "@testing-library/react";
-import { MemoryRouter, useNavigate } from "react-router-dom";
+import {
+  createMemoryRouter,
+  RouterProvider,
+  useNavigate,
+} from "react-router-dom";
 import App from "./App";
 import { api, post } from "./api";
 vi.mock("./api", () => ({
@@ -54,16 +59,36 @@ function Back() {
 }
 function mount(path = "/create", entries?: string[]) {
   return render(
-    <MemoryRouter initialEntries={entries || [path]}>
-      <App />
-      <Back />
-    </MemoryRouter>,
+    <RouterProvider
+      router={createMemoryRouter(
+        [
+          {
+            path: "*",
+            element: (
+              <>
+                <App />
+                <Back />
+              </>
+            ),
+          },
+        ],
+        { initialEntries: entries || [path] },
+      )}
+    />,
   );
 }
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
   vi.clearAllMocks();
+  vi.stubGlobal(
+    "AbortController",
+    class {
+      constructor() {
+        return transferableAbortController();
+      }
+    },
+  );
   window.scrollTo = vi.fn();
   call.mockImplementation(async (path: string) => {
     if (path === "/config") return cfg;
@@ -179,6 +204,9 @@ describe("unified application integration", () => {
       throw Error(path);
     });
     mount("/jobs/job1");
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reveal this version" }),
+    );
     await screen.findAllByText("A test concept");
     expect(
       screen.getByText("Text concept demo · No image generated"),
@@ -191,9 +219,9 @@ describe("unified application integration", () => {
     expect(document.querySelector(".result-art>img")).toBeNull();
     expect(
       screen
-        .getByRole("link", { name: "Push it further" })
+        .getByRole("link", { name: "Choose a direction and version" })
         .getAttribute("href"),
-    ).toBe("/remix/v1");
+    ).toBe("/remix/v1?version=v1");
     expect(screen.queryByText("100%")).toBeNull();
   });
   it("renders mobile navigation without CN community links", () => {
@@ -672,5 +700,289 @@ describe("unified application integration", () => {
     mount("/");
     expect(document.querySelector("footer")).not.toBeNull();
     expect(document.querySelector("header nav")).not.toBeNull();
+  });
+  it("blocks active-task browser Back and Forward unless departure is confirmed", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    call.mockImplementation(async (path) => {
+      if (path === "/config") return cfg;
+      if (path === "/auth/me") throw Error("guest");
+      if (path === "/generation-jobs/j1")
+        return {
+          id: "j1",
+          status: "running",
+          stage: "PROVIDER_PIPELINE",
+          version_id: null,
+          demo: true,
+          error: null,
+        };
+      throw Error(path);
+    });
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    mount("", ["/works", "/jobs/j1", "/create"]);
+    fireEvent.click(screen.getByRole("button", { name: "Test browser back" }));
+    await screen.findByRole("button", { name: "Cancel task" });
+    fireEvent.click(screen.getByRole("button", { name: "Test browser back" }));
+    await waitFor(() => expect(confirm).toHaveBeenCalled());
+    expect(document.querySelector(".job-page")).not.toBeNull();
+    confirm.mockClear();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Test browser forward" }),
+    );
+    await waitFor(() => expect(confirm).toHaveBeenCalled());
+    expect(document.querySelector(".job-page")).not.toBeNull();
+    confirm.mockReturnValue(true);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Test browser forward" }),
+    );
+    await waitFor(() =>
+      expect(document.querySelector(".create-page")).not.toBeNull(),
+    );
+    confirm.mockRestore();
+  });
+  it("creates a direct continuation using exactly the current result parent", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    call.mockImplementation(async (path, options) => {
+      if (path === "/config") return { ...cfg, generation_enabled: true };
+      if (path === "/auth/me") return { user: { id: "u1" } };
+      if (path === "/versions/v1") return version;
+      if (path === "/generation-jobs") return { id: "j2", status: "queued" };
+      if (path === "/generation-jobs/j2")
+        return {
+          id: "j2",
+          status: "queued",
+          stage: "REQUEST_INTAKE",
+          demo: true,
+        };
+      throw Error(path);
+    });
+    mount("/result/v1");
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Push it further" }),
+    );
+    await waitFor(() =>
+      expect(call.mock.calls.some(([p]) => p === "/generation-jobs")).toBe(
+        true,
+      ),
+    );
+    const request = call.mock.calls.find(
+      ([p]) => p === "/generation-jobs",
+    )![1]!;
+    expect(JSON.parse(request.body as string)).toEqual({
+      kind: "continuation",
+      parent_version_id: "v1",
+      locale: "en",
+    });
+  });
+  it("only displays actual child branches and navigates to the chosen child", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    call.mockImplementation(async (path) => {
+      if (path === "/config") return cfg;
+      if (path === "/auth/me") throw Error("guest");
+      if (path === "/versions/v1") return version;
+      if (path === "/versions/v1/children")
+        return {
+          items: [
+            {
+              ...version,
+              id: "child",
+              parent_version_id: "v1",
+              title: "Owned child",
+            },
+          ],
+        };
+      if (path === "/versions/child")
+        return {
+          ...version,
+          id: "child",
+          parent_version_id: "v1",
+          title: "Owned child",
+        };
+      throw Error(path);
+    });
+    mount("/result/v1");
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Browse existing branches" }),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: /Owned child/ }));
+    await waitFor(() =>
+      expect(document.querySelector(".result-art-title h1")?.textContent).toBe(
+        "Owned child",
+      ),
+    );
+  });
+  it("searches server world names and retains filters after opening a detail", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    call.mockImplementation(async (path) => {
+      if (path === "/config") return cfg;
+      if (path === "/auth/me") return { user: { id: "u1" } };
+      if (path === "/me/works") return { items: [version] };
+      if (path === "/me/story-worlds")
+        return { items: [{ id: "world1", title: "Unique world name" }] };
+      if (path === "/versions/v1") return version;
+      throw Error(path);
+    });
+    mount("/works");
+    fireEvent.change(await screen.findByRole("searchbox"), {
+      target: { value: "Unique world name" },
+    });
+    await waitFor(() =>
+      expect(document.querySelectorAll(".work-card").length).toBe(1),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Originals" }));
+    fireEvent.click(document.querySelector(".work-card .work-image")!);
+    await screen.findByRole("button", { name: "Push it further" });
+    fireEvent.click(screen.getByRole("button", { name: "Test browser back" }));
+    await waitFor(() =>
+      expect((screen.getByRole("searchbox") as HTMLInputElement).value).toBe(
+        "Unique world name",
+      ),
+    );
+    expect(
+      screen
+        .getByRole("button", { name: "Originals" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(document.querySelector(".work-growth")?.getAttribute("href")).toBe(
+      "/worlds/world1?version=v1",
+    );
+  });
+  it("explains a backend timeout without claiming a successful result", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    call.mockImplementation(async (path) => {
+      if (path === "/config") return cfg;
+      if (path === "/auth/me") throw Error("guest");
+      if (path === "/generation-jobs/j1")
+        return {
+          id: "j1",
+          status: "failed",
+          stage: "FAILED",
+          error: { code: "PIPELINE_TIMEOUT" },
+          demo: false,
+        };
+      throw Error(path);
+    });
+    mount("/jobs/j1");
+    expect((await screen.findByRole("alert")).textContent).toContain(
+      "server confirmed",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Reveal this version" }),
+    ).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Retry original input" }),
+    ).toBeTruthy();
+  });
+  it("hydrates account locale once and persists explicit header changes without route resets", async () => {
+    call.mockImplementation(async (path, options) => {
+      if (path === "/config") return cfg;
+      if (path === "/auth/me") return { user: { id: "u1" } };
+      if (path === "/me/settings")
+        return { locale: options?.method === "PATCH" ? "zh-CN" : "en" };
+      if (path === "/me/works" || path === "/me/story-worlds")
+        return { items: [] };
+      throw Error(path);
+    });
+    mount("/create");
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Interface language" }),
+    );
+    await waitFor(() =>
+      expect(
+        call.mock.calls.some(
+          ([p, o]) => p === "/me/settings" && o?.method === "PATCH",
+        ),
+      ).toBe(true),
+    );
+    fireEvent.click(document.querySelector('.mobile-nav a[href="/works"]')!);
+    await waitFor(() =>
+      expect(
+        document
+          .querySelector('.mobile-nav a[aria-current="page"]')
+          ?.getAttribute("href"),
+      ).toBe("/works"),
+    );
+    expect(screen.getByRole("button", { name: "界面语言" })).toBeTruthy();
+    expect(
+      call.mock.calls.filter(([p, o]) => p === "/me/settings" && !o).length,
+    ).toBe(1);
+  });
+  it("creator view shows account-wide server counts rather than one world", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    call.mockImplementation(async (path) => {
+      if (path === "/config") return cfg;
+      if (path === "/auth/me") return { user: { id: "u1" } };
+      if (path === "/story-worlds/world1") return { items: [version] };
+      if (path === "/me/story-worlds")
+        return {
+          items: [
+            { id: "world1", title: "First world", version_count: 1 },
+            { id: "world2", title: "Second world", version_count: 23 },
+          ],
+        };
+      if (path === "/me/creator-summary")
+        return {
+          profile: {
+            nickname: "Actual creator",
+            bio: "Private creator bio",
+            avatar_url: "/api/v1/uploads/avatar",
+          },
+          stats: { worlds: 7, versions: 24 },
+        };
+      if (path.endsWith("/contributions")) return { record_available: false };
+      throw Error(path);
+    });
+    mount("/worlds/world1");
+    fireEvent.click(await screen.findByRole("button", { name: "Creator" }));
+    await screen.findByText("Actual creator");
+    expect(screen.getByText("Private creator bio")).toBeTruthy();
+    expect(
+      document.querySelector(".creator-profile > img")?.getAttribute("src"),
+    ).toBe("/api/v1/uploads/avatar");
+    expect(
+      screen.getByRole("link", { name: /Second world/ }).getAttribute("href"),
+    ).toBe("/worlds/world2");
+    expect(
+      document.querySelector(".creator-profile .library-stats")?.textContent,
+    ).toContain("24");
+    expect(
+      document.querySelector(".creator-profile .library-stats")?.textContent,
+    ).toContain("7");
+  });
+  it("keeps and saves the selected guest language when creating an account", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    call.mockImplementation(async (path, options) => {
+      if (path === "/config") return cfg;
+      if (path === "/auth/me") throw Error("guest");
+      if (path === "/me/settings")
+        return { locale: options?.method === "PATCH" ? "en" : "zh-CN" };
+      throw Error(path);
+    });
+    send.mockResolvedValue({ user: { id: "new-user" } });
+    mount("/create");
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "fixture@example.test" },
+    });
+    fireEvent.change(
+      screen.getByLabelText("Password (at least 10 characters)"),
+      { target: { value: "synthetic-password" } },
+    );
+    fireEvent.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Create account",
+      }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(
+      screen.getByRole("button", { name: "Interface language" }),
+    ).toBeTruthy();
+    const saved = call.mock.calls.find(
+      ([p, o]) => p === "/me/settings" && o?.method === "PATCH",
+    );
+    expect(JSON.parse(saved![1]!.body as string)).toEqual({ locale: "en-US" });
+    expect(
+      call.mock.calls.filter(([p, o]) => p === "/me/settings" && !o).length,
+    ).toBe(0);
   });
 });

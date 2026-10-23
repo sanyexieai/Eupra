@@ -1,6 +1,7 @@
 mod assets;
 #[allow(dead_code)]
 mod engine;
+mod personal;
 #[allow(dead_code)]
 mod planning;
 mod provider;
@@ -76,6 +77,7 @@ fn init(db: Connection, demo: bool) -> App {
     db.execute_batch("PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,hash TEXT NOT NULL,settings TEXT NOT NULL); CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),expires INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS uploads(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),mime TEXT NOT NULL,bytes BLOB NOT NULL); CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),idem TEXT NOT NULL,request TEXT NOT NULL,data TEXT NOT NULL,UNIQUE(user_id,idem)); CREATE TABLE IF NOT EXISTS versions(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),world TEXT NOT NULL,data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS reports(id TEXT PRIMARY KEY,user_id TEXT NOT NULL,version_id TEXT NOT NULL,reason TEXT NOT NULL); CREATE TABLE IF NOT EXISTS video_ledger(job_id TEXT PRIMARY KEY,user_id TEXT NOT NULL,day TEXT NOT NULL); ").expect("database schema");
     sharing::schema(&db);
     assets::schema(&db);
+    personal::schema(&db);
     db.execute_batch("CREATE TABLE IF NOT EXISTS auth_attempts(email_hash TEXT NOT NULL,at INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS auth_attempt_time ON auth_attempts(at);").expect("auth rate schema");
     let rows: Vec<(String, String)> = db
         .prepare("SELECT id,data FROM jobs")
@@ -194,6 +196,19 @@ fn routes(a: App) -> Router {
         .route("/api/v1/me/works", get(assets::works))
         .route("/api/v1/me/settings", get(settings).patch(settings_patch))
         .route("/api/v1/me/video-credits", get(credits))
+        .route(
+            "/api/v1/versions/{id}/motion-preference",
+            get(personal::motion).patch(personal::patch_motion),
+        )
+        .route(
+            "/api/v1/me/profile",
+            get(personal::profile).patch(personal::patch_profile),
+        )
+        .route("/api/v1/me/creator-summary", get(personal::summary))
+        .route(
+            "/api/v1/me/appeals",
+            get(personal::appeals).post(personal::appeal),
+        )
         .route("/api/v1/share-links", post(sharing::create))
         .route("/api/v1/share-links/{id}/revoke", post(sharing::revoke))
         .route("/api/v1/me/share-links", get(sharing::links))
@@ -859,7 +874,11 @@ async fn settings(State(a): State<App>, h: HeaderMap) -> R<Json<Value>> {
         a.db.lock()
             .unwrap()
             .query_row("SELECT settings FROM users WHERE id=?", [uid], |r| r.get(0))?;
-    Ok(Json(serde_json::from_str(&data).unwrap()))
+    let mut value: Value = serde_json::from_str(&data).unwrap();
+    if value.get("notifications_enabled").is_none() {
+        value["notifications_enabled"] = json!(false);
+    }
+    Ok(Json(value))
 }
 async fn settings_patch(
     State(a): State<App>,
@@ -867,28 +886,56 @@ async fn settings_patch(
     Json(v): Json<Value>,
 ) -> R<Json<Value>> {
     let uid = user(&a, &h)?;
-    let mut old = settings(State(a.clone()), h).await?.0;
+    let obj = v.as_object().ok_or_else(|| {
+        err(
+            StatusCode::BAD_REQUEST,
+            "INVALID_SETTING",
+            "Object required",
+        )
+    })?;
+    if obj.keys().any(|k| {
+        !matches!(
+            k.as_str(),
+            "locale" | "default_remix_allowed" | "notifications_enabled"
+        )
+    }) {
+        return Err(err(
+            StatusCode::BAD_REQUEST,
+            "INVALID_SETTING",
+            "Unsupported setting",
+        ));
+    }
+    let db = a.db.lock().unwrap();
+    let raw: String = db.query_row("SELECT settings FROM users WHERE id=?", [&uid], |r| {
+        r.get(0)
+    })?;
+    let mut old: Value = serde_json::from_str(&raw).unwrap();
     if let Some(l) = v.get("locale") {
-        if l != "en" && l != "zh-CN" {
+        if l != "en" && l != "en-US" && l != "zh-CN" {
             return Err(err(
                 StatusCode::BAD_REQUEST,
                 "INVALID_LOCALE",
-                "Supported locales: zh-CN, en",
+                "Supported locales: zh-CN, en (en-US alias)",
             ));
         }
-        old["locale"] = l.clone();
+        old["locale"] = if l == "en-US" { json!("en") } else { l.clone() };
     }
-    if let Some(b) = v.get("default_remix_allowed") {
-        if !b.is_boolean() {
-            return Err(err(
-                StatusCode::BAD_REQUEST,
-                "INVALID_SETTING",
-                "Boolean required",
-            ));
+    for k in ["default_remix_allowed", "notifications_enabled"] {
+        if let Some(b) = v.get(k) {
+            if !b.is_boolean() {
+                return Err(err(
+                    StatusCode::BAD_REQUEST,
+                    "INVALID_SETTING",
+                    "Boolean required",
+                ));
+            }
+            old[k] = b.clone();
         }
-        old["default_remix_allowed"] = b.clone();
     }
-    a.db.lock().unwrap().execute(
+    if old.get("notifications_enabled").is_none() {
+        old["notifications_enabled"] = json!(false);
+    }
+    db.execute(
         "UPDATE users SET settings=? WHERE id=?",
         params![old.to_string(), uid],
     )?;
@@ -897,7 +944,7 @@ async fn settings_patch(
 async fn credits(State(a): State<App>, h: HeaderMap) -> R<Json<Value>> {
     user(&a, &h)?;
     Ok(Json(
-        json!({"daily_limit":2,"successful_today":0,"remaining":2,"enabled":false}),
+        json!({"daily_limit":2,"successful_today":0,"remaining":2,"enabled":false,"available_now":0,"exhausted":false,"timezone":"UTC","next_reset_at":(now()/86400+1)*86400,"unavailable_reason":"VIDEO_UNAVAILABLE","accounting_active":false,"paid_entitlements":false}),
     ))
 }
 async fn publish(State(a): State<App>, h: HeaderMap, Path(key): Path<String>) -> R<Json<Value>> {

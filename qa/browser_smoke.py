@@ -16,6 +16,11 @@ BASE='http://127.0.0.1:5173'
 checks=[]; captures=[]
 def passed(label):
  checks.append(label); print('PASS',label,flush=True)
+def reveal(page, chinese=False):
+ page.get_by_role('button',name='看看发生了什么' if chinese else 'Reveal this version',exact=True).wait_for(timeout=20000)
+ assert '/jobs/' in page.url, 'Success must remain in the theater until deliberate reveal'
+ page.get_by_role('button',name='看看发生了什么' if chinese else 'Reveal this version',exact=True).click()
+ page.wait_for_url('**/result/**',timeout=20000)
 def ready(url):
  for _ in range(250):
   try: urllib.request.urlopen(url); return
@@ -89,21 +94,28 @@ try:
    root_id=None; child_id=None; world_id=None; token=None; cancelled_job=None
    if MODE=='demo':
     page.get_by_role('button',name='Let it happen',exact=True).click()
-    page.wait_for_url('**/result/**',timeout=20000)
+    reveal(page)
     root_id=page.url.rsplit('/',1)[1]
     page.get_by_text('Text concept demo · No image generated',exact=True).first.wait_for()
     assert page.locator('.result-art > img').count()==0
     passed('CN-02→03→04 real API text-demo job, no invented image')
     root_version=page.request.get(BASE+'/api/v1/versions/'+root_id).json()
     world_id=root_version['story_world_id']
-    page.get_by_role('link',name='Push it further',exact=True).click()
-    page.wait_for_selector('.version-strip button')
     page.get_by_role('button',name='Push it further',exact=True).click()
-    page.wait_for_url('**/result/**',timeout=20000)
+    reveal(page)
     child_id=page.url.rsplit('/',1)[1]
     child=page.request.get(BASE+'/api/v1/versions/'+child_id).json()
     assert child_id!=root_id and child['parent_version_id']==root_id
-    passed('CN-05 continuation creates immutable child with accurate parent')
+    passed('CN-04 one-action continuation creates immutable child with accurate parent and deliberate reveal')
+    page.goto(BASE+'/result/'+root_id)
+    page.get_by_role('button',name='Browse existing branches',exact=True).click()
+    page.locator('.inline-branches .version-strip button').first.click()
+    expect(page).to_have_url(BASE+'/result/'+child_id)
+    page.get_by_role('link',name='Choose a direction and version',exact=True).click()
+    page.wait_for_selector('.version-strip button')
+    page.get_by_role('link',name='Return to selected result',exact=True).click()
+    expect(page).to_have_url(BASE+'/result/'+child_id)
+    passed('CN-04/05 actual inline child browsing and selected-version result return')
     page.goto(BASE+'/works'); page.wait_for_selector('.work-card')
     assert page.locator('.work-card').count()==2
     page.get_by_role('button',name='Remixes',exact=True).click()
@@ -114,10 +126,16 @@ try:
     assert page.locator('.work-card').count()==1
     page.get_by_role('searchbox',name='Search your creations').fill('impossible-search-no-match')
     page.get_by_text('No matching versions',exact=True).wait_for()
-    page.reload(); page.wait_for_selector('.work-card')
-    page.get_by_role('button',name='Favorites',exact=True).click()
+    page.reload(); page.get_by_text('No matching versions',exact=True).wait_for()
+    expect(page.get_by_role('searchbox',name='Search your creations')).to_have_value('impossible-search-no-match')
+    page.get_by_role('searchbox',name='Search your creations').fill('')
+    page.wait_for_selector('.work-card')
     assert page.locator('.work-card').count()==1
-    passed('CN-08 filters/search and favorite survives reload')
+    own_world=next(w for w in page.request.get(BASE+'/api/v1/me/story-worlds').json()['items'] if w['id']==world_id)
+    page.get_by_role('searchbox',name='Search your creations').fill(own_world['title'])
+    expect(page.locator('.work-card')).to_have_count(1)
+    page.get_by_role('searchbox',name='Search your creations').fill('')
+    passed('CN-08 world-name search, filter/query reload and favorite persistence')
     page.goto(BASE+'/worlds/'+world_id); page.wait_for_selector('.timeline-node')
     assert page.locator('.timeline-node').count()==2
     strip=page.get_by_role('group',name='Browse story versions')
@@ -185,7 +203,7 @@ try:
     page.get_by_role('button',name='文字',exact=True).click()
     page.get_by_role('textbox',name='文字',exact=True).fill('今天又开了一场本来可以发邮件的会议。')
     page.get_by_role('button',name='让它发生点什么',exact=True).click()
-    page.wait_for_url('**/result/**',timeout=20000)
+    reveal(page,chinese=True)
     chinese_id=page.url.rsplit('/',1)[1]
     chinese=page.request.get(BASE+'/api/v1/versions/'+chinese_id).json()
     assert chinese['title']=='日常事务正式提出异议' and chinese['demo'] is True and chinese['image_url'] is None
@@ -302,9 +320,68 @@ try:
     if cancelled_job:
      page.goto(BASE+'/jobs/'+cancelled_job)
      page.get_by_role('button',name='Retry original input',exact=True).click()
-     page.wait_for_url('**/result/**',timeout=20000)
+     reveal(page)
      assert page.url.rsplit('/',1)[1] not in (root_id,child_id)
      passed('terminal job retry uses full server-retained source input and creates a new job')
+   # Real personal controls use isolated synthetic accounts, never public profile data.
+   page.goto(BASE+'/settings'); page.locator('.pp-profile').wait_for()
+   page.get_by_role('button',name='Edit profile',exact=True).click()
+   profile_editor=page.locator('.pp-profile-editor')
+   profile_editor.get_by_label('Nickname',exact=True).fill('Browser test creator')
+   profile_editor.get_by_label('Bio',exact=True).fill('Synthetic private profile for regression checks.')
+   profile_editor.get_by_label('Choose avatar image',exact=True).set_input_files(str(ROOT/'frontend/public/assets/demo-source.webp'))
+   profile_editor.get_by_role('button',name='Save profile',exact=True).click()
+   page.get_by_role('heading',name='Browser test creator',exact=True).wait_for()
+   profile=page.request.get(BASE+'/api/v1/me/profile').json()
+   assert profile['bio']=='Synthetic private profile for regression checks.' and profile['avatar_url'].startswith('/api/v1/uploads/')
+   anonymous=browser.new_context()
+   assert anonymous.request.get(BASE+profile['avatar_url']).status in (401,404)
+   anonymous.close()
+   page.reload(); page.get_by_role('heading',name='Browser test creator',exact=True).wait_for()
+   preference=page.get_by_role('switch',name='Local notification preference',exact=True)
+   preference.check()
+   page.wait_for_function("fetch('/api/v1/me/settings').then(r=>r.json()).then(s=>s.notifications_enabled===true)")
+   page.reload(); expect(page.get_by_role('switch',name='Local notification preference',exact=True)).to_be_checked()
+   assert page.request.get(BASE+'/api/v1/me/profile').json()['nickname']=='Browser test creator'
+   passed('CN-11 private profile/avatar and local-only notification preference persist without public access')
+   page.screenshot(path=str(ART/('CN-11-edited-profile-mobile-en-US-'+MODE+'.png')),full_page=True)
+   if page.locator('.toast').count(): page.locator('.toast button').click()
+   if MODE=='demo':
+    page.get_by_role('button',name='Help and privacy',exact=True).click()
+    page.get_by_label('Choose a work (all owned)',exact=True).select_option(root_id)
+    page.get_by_label('Appeal reason',exact=True).fill('Synthetic appeal record; no human review requested or implied.')
+    page.get_by_role('button',name='Save local appeal',exact=True).click()
+    page.get_by_text('Local appeal saved. No staff processing is configured.',exact=True).wait_for()
+    appeals=page.request.get(BASE+'/api/v1/me/appeals').json()
+    assert appeals['processing_enabled'] is False and appeals['items'][0]['status']=='pending_local'
+    assert page.request.get(BASE+'/api/v1/versions/'+root_id+'/export-permission').json()['allowed'] is False
+    passed('CN-11 genuine private appeal record remains local and never authorizes export')
+    page.goto(BASE+'/video/'+root_id)
+    page.get_by_role('button',name='Write your own motion',exact=True).click()
+    page.get_by_role('textbox',name='Write your own motion',exact=True).fill('Synthetic saved camera movement.')
+    page.get_by_role('button',name='Save motion idea',exact=True).click()
+    page.get_by_text('Motion idea saved for this work',exact=True).wait_for()
+    page.reload()
+    expect(page.get_by_role('textbox',name='Write your own motion',exact=True)).to_have_value('Synthetic saved camera movement.')
+    motion=page.request.get(BASE+'/api/v1/versions/'+root_id+'/motion-preference').json()
+    assert motion['preset']=='custom' and motion['generation_enabled'] is False
+    credits=page.request.get(BASE+'/api/v1/me/video-credits').json()
+    assert credits['successful_today']==0 and credits['available_now']==0 and credits['accounting_active'] is False
+    page.goto(BASE+'/balance?version='+root_id)
+    page.get_by_text('Reset timezone · UTC',exact=True).wait_for()
+    passed('CN-12 motion idea survives reload; CN-13 shows actual policy reset without usable video entitlement')
+    page.goto(BASE+'/worlds/'+world_id)
+    page.get_by_role('button',name='Creator',exact=True).click()
+    page.get_by_role('heading',name='Browser test creator',exact=True).wait_for()
+    own_worlds=page.request.get(BASE+'/api/v1/me/story-worlds').json()['items']
+    expect(page.locator('.creator-world-option')).to_have_count(len(own_worlds))
+    assert len(own_worlds)>=2
+    another=next(w for w in own_worlds if w['id']!=world_id)
+    page.screenshot(path=str(ART/'CN-10-private-creator-mobile-en-US-demo.png'),full_page=True)
+    page.locator('.creator-world-list a[href="/worlds/'+another['id']+'"]').click()
+    expect(page).to_have_url(BASE+'/worlds/'+another['id'])
+    page.locator('.world-overview').wait_for()
+    passed('CN-10 private creator profile and actual account-wide world chooser navigate another owned world')
    assert not errors,errors; passed('no browser JavaScript runtime errors')
   except Exception as exc:
    # Only URL path and sanitized exception type are retained; never cookies/password fields.

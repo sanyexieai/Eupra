@@ -16,6 +16,7 @@ import {
   FolderHeart,
   Lock,
   Settings,
+  Check,
 } from "lucide-react";
 import { api, post, type Version } from "./api";
 import zh from "./locales/personal-zh-CN.json";
@@ -28,6 +29,7 @@ type AppContext = {
   setUser: (u: any) => void;
   setAuth: (v: boolean) => void;
   setLocale: (v: string) => void;
+  applyLocale?: (v: string) => void;
   setNotice: (v: string) => void;
   error: (e: unknown) => void;
   config: any;
@@ -35,11 +37,35 @@ type AppContext = {
 };
 const useText = (app: AppContext) => (key: Key) =>
   (app.locale === "zh-CN" ? zh : en)[key];
+type Profile = {
+  user_id: string;
+  nickname: string;
+  bio: string;
+  avatar_asset_id: string | null;
+  avatar_url: string | null;
+  updated_at: number | null;
+};
+type CreatorSummary = {
+  stats: {
+    worlds: number;
+    works: number;
+    versions: number;
+    drafts: number;
+    trashed_works: number;
+  };
+  recent_versions: Version[];
+  profile: Profile;
+};
 type Credits = {
   remaining: number;
   daily_limit: number;
   successful_today: number;
   enabled: boolean;
+  timezone?: string;
+  next_reset_at?: number | null;
+  available_now?: number;
+  exhausted?: boolean;
+  unavailable_reason?: string;
 };
 function useCredits(user: any) {
   const [data, setData] = useState<Credits | null>(null);
@@ -170,6 +196,8 @@ export function ProfileSettings({ app }: { app: AppContext }) {
   const t = useText(app);
   const [works, setWorks] = useState<Version[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [summary, setSummary] = useState<CreatorSummary | null>(null);
   const [settings, setSettings] = useState<any>(null);
   const [settingsFailed, setSettingsFailed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -178,13 +206,21 @@ export function ProfileSettings({ app }: { app: AppContext }) {
   useEffect(() => {
     let alive = true;
     setWorks(null);
+    setProfile(null);
+    setSummary(null);
     setSettings(null);
     setFailed(false);
     setSettingsFailed(false);
     if (app.user) {
-      api("/me/works")
+      api<CreatorSummary>("/me/creator-summary")
         .then((r) => {
-          if (alive) setWorks(r.items);
+          if (!r.stats || !Array.isArray(r.recent_versions) || !r.profile)
+            throw new Error("Invalid creator summary");
+          if (alive) {
+            setWorks(r.recent_versions);
+            setSummary(r);
+            setProfile(r.profile);
+          }
         })
         .catch(() => {
           if (alive) setFailed(true);
@@ -209,8 +245,15 @@ export function ProfileSettings({ app }: { app: AppContext }) {
         body: JSON.stringify(value),
       });
       setSettings(next);
-      if (value.locale)
-        app.setLocale(value.locale === "en" ? "en-US" : "zh-CN");
+      if (
+        value.locale &&
+        (next.locale === "en" ||
+          next.locale === "en-US" ||
+          next.locale === "zh-CN")
+      )
+        (app.applyLocale || app.setLocale)(
+          next.locale === "zh-CN" ? "zh-CN" : "en-US",
+        );
       app.setNotice(t("saved"));
     } catch {
       app.setNotice(t("saveError"));
@@ -218,12 +261,8 @@ export function ProfileSettings({ app }: { app: AppContext }) {
       setBusy(false);
     }
   };
-  const counts = works
-    ? [
-        new Set(works.map((v) => v.story_world_id)).size,
-        works.filter((v) => !v.parent_version_id).length,
-        works.length,
-      ]
+  const counts = summary?.stats
+    ? [summary.stats.worlds, summary.stats.works, summary.stats.versions]
     : null;
   return (
     <main className="pp-profile">
@@ -241,18 +280,24 @@ export function ProfileSettings({ app }: { app: AppContext }) {
         </a>
       </div>
       <div className="pp-profile-heading">
-        <div className="pp-avatar">✦</div>
+        <div className="pp-avatar">
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt={t("avatar")} />
+          ) : (
+            "✦"
+          )}
+        </div>
         <div>
           <small>{t("profile")}</small>
-          <h1>{app.user?.email || t("guest")}</h1>
-          <p>{t("profileBody")}</p>
+          <h1>{profile?.nickname || app.user?.email || t("guest")}</h1>
+          <p>{profile?.bio || t("profileBody")}</p>
         </div>
         {app.user ? (
           <button
             className="pp-light-button"
             onClick={() => setSheet("account")}
           >
-            {t("account")}
+            {t("editProfile")}
           </button>
         ) : (
           <button className="pp-light-button" onClick={() => app.setAuth(true)}>
@@ -394,6 +439,24 @@ export function ProfileSettings({ app }: { app: AppContext }) {
               )}
             </>
           )}
+          {app.user && typeof settings?.notifications_enabled === "boolean" && (
+            <div className="pp-row pp-remix-row">
+              <div>
+                <span>{t("notifications")}</span>
+                <p>{t("notificationNote")}</p>
+              </div>
+              <input
+                type="checkbox"
+                role="switch"
+                aria-label={t("notifications")}
+                checked={settings.notifications_enabled}
+                disabled={busy}
+                onChange={(e) =>
+                  save({ notifications_enabled: e.target.checked })
+                }
+              />
+            </div>
+          )}
           <Link className="pp-row" to="/works">
             <span>
               <FolderHeart size={20} />
@@ -442,8 +505,26 @@ export function ProfileSettings({ app }: { app: AppContext }) {
           closeLabel={t("close")}
           onClose={() => setSheet(null)}
         >
-          {sheet === "account" && <strong>{app.user?.email}</strong>}
-          <p>{t((sheet + "Body") as Key)}</p>
+          {sheet === "account" ? (
+            <>
+              <strong>{app.user?.email}</strong>
+              {profile ? (
+                <ProfileEditor
+                  app={app}
+                  profile={profile}
+                  onSaved={(value) => {
+                    setProfile(value);
+                    setSheet(null);
+                  }}
+                />
+              ) : (
+                <p>{t(failed ? "loadError" : "loading")}</p>
+              )}
+            </>
+          ) : (
+            <p>{t((sheet + "Body") as Key)}</p>
+          )}
+          {sheet === "help" && app.user && <AppealRecords app={app} />}
         </Sheet>
       )}
     </main>
@@ -459,6 +540,67 @@ export function VideoStudio({
   const t = useText(app);
   const [action, setAction] = useState("action1");
   const [custom, setCustom] = useState("");
+  const [motionLoaded, setMotionLoaded] = useState(false);
+  const [motionFailed, setMotionFailed] = useState(false);
+  const [motionBusy, setMotionBusy] = useState(false);
+  const [motionRefresh, setMotionRefresh] = useState(0);
+  const motionSource = useRef(version.id);
+  useEffect(() => {
+    let active = true;
+    motionSource.current = version.id;
+    setMotionLoaded(false);
+    setMotionFailed(false);
+    setMotionBusy(false);
+    setAction("action1");
+    setCustom("");
+    api<{ preset: string; custom_text: string }>(
+      "/versions/" + encodeURIComponent(version.id) + "/motion-preference",
+    )
+      .then((value) => {
+        if (!active) return;
+        const map: Record<string, string> = {
+          gentle: "action1",
+          dynamic: "action2",
+          cinematic: "action3",
+          custom: "custom",
+        };
+        setAction(map[value.preset] || "action1");
+        setCustom(value.custom_text || "");
+        setMotionLoaded(true);
+      })
+      .catch(() => {
+        if (active) setMotionFailed(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [version.id, motionRefresh]);
+  const saveMotion = async () => {
+    if (!motionLoaded || motionBusy) return;
+    const source = version.id;
+    setMotionBusy(true);
+    try {
+      const map: Record<string, string> = {
+        action1: "gentle",
+        action2: "dynamic",
+        action3: "cinematic",
+        custom: "custom",
+      };
+      await api(
+        "/versions/" + encodeURIComponent(source) + "/motion-preference",
+        {
+          method: "PATCH",
+          body: JSON.stringify({ preset: map[action], custom_text: custom }),
+        },
+      );
+      if (motionSource.current === source) app.setNotice(t("motionSaved"));
+    } catch {
+      if (motionSource.current === source) app.setNotice(t("saveError"));
+    } finally {
+      if (motionSource.current === source) setMotionBusy(false);
+    }
+  };
+
   const [demo, setDemo] = useState(false);
   const [mediaFailed, setMediaFailed] = useState(false);
   const demoVideo = useRef<HTMLVideoElement>(null);
@@ -525,6 +667,7 @@ export function VideoStudio({
               <button
                 key={k}
                 aria-pressed={action === k}
+                disabled={motionBusy || (!motionLoaded && !motionFailed)}
                 className={action === k ? "active" : ""}
                 onClick={() => setAction(k)}
               >
@@ -538,12 +681,33 @@ export function VideoStudio({
                 aria-label={t("custom")}
                 placeholder={t("customPlaceholder")}
                 maxLength={150}
+                disabled={motionBusy || (!motionLoaded && !motionFailed)}
                 value={custom}
                 onChange={(e) => setCustom(e.target.value)}
               />
               <small>{custom.length}/150</small>
             </div>
           )}
+          {motionFailed && (
+            <div className="pp-unavailable" role="alert">
+              <p>{t("motionLoadFailed")}</p>
+              <button
+                className="pp-link"
+                onClick={() => setMotionRefresh((v) => v + 1)}
+              >
+                {t("retry")}
+              </button>
+            </div>
+          )}
+          <button
+            className="pp-link pp-motion-save"
+            disabled={!motionLoaded || motionBusy}
+            onClick={saveMotion}
+          >
+            {t("motionSave")}
+            <Check size={16} />
+          </button>
+          <p className="pp-demo-note">{t("motionSavedNote")}</p>
           <Quota app={app} />
           <p className="pp-muted">{t("creditBody")}</p>
           <div className="pp-unavailable" role="status">
@@ -688,7 +852,9 @@ export function VideoBalance({ app }: { app: AppContext }) {
         <section className="pp-balance-card">
           <div className="pp-section-heading">
             <h2>{t("today")}</h2>
-            <span className="pp-status">{t("statusOff")}</span>
+            <span className="pp-status">
+              {t(data.enabled ? "quotaAvailable" : "statusOff")}
+            </span>
           </div>
           <p>{t("creditBody")}</p>
           <div
@@ -728,6 +894,18 @@ export function VideoBalance({ app }: { app: AppContext }) {
             </span>
           </div>
           <p className="pp-muted">{t("quotaNote")}</p>
+          {data.exhausted === true && (
+            <p className="pp-exhausted" role="status">
+              {t("exhausted")}
+            </p>
+          )}
+          {typeof data.available_now === "number" && (
+            <p className="pp-muted">
+              {t("availableNow")} · {data.available_now}
+            </p>
+          )}
+          <ServerReset data={data} locale={app.locale} t={t} />
+
           <button className="pp-link" onClick={() => setSheet("policy")}>
             {t("policy")}
             <ChevronRight size={16} />
@@ -788,5 +966,357 @@ export function VideoBalance({ app }: { app: AppContext }) {
         </Sheet>
       )}
     </main>
+  );
+}
+
+function ProfileEditor({
+  app,
+  profile,
+  onSaved,
+}: {
+  app: AppContext;
+  profile: Profile;
+  onSaved: (value: Profile) => void;
+}) {
+  const t = useText(app);
+  const [nickname, setNickname] = useState(profile.nickname);
+  const [bio, setBio] = useState(profile.bio);
+  const [file, setFile] = useState<File | null>(null);
+  const [remove, setRemove] = useState(false);
+  const [preview, setPreview] = useState(profile.avatar_url);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!file) {
+      setPreview(remove ? null : profile.avatar_url);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file, remove, profile.avatar_url]);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setFailed(false);
+    try {
+      let avatar_asset_id = remove ? null : profile.avatar_asset_id;
+      if (file) {
+        const form = new FormData();
+        form.append("file", file);
+        const result = await api<{ id: string }>("/uploads", {
+          method: "POST",
+          body: form,
+        });
+        avatar_asset_id = result.id;
+      }
+      const next = await api<Profile>("/me/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ nickname, bio, avatar_asset_id }),
+      });
+      onSaved(next);
+      app.setNotice(t("profileSaved"));
+    } catch {
+      setFailed(true);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <form className="pp-profile-editor" onSubmit={submit}>
+      <div className="pp-edit-avatar">
+        {preview ? (
+          <img src={preview} alt={t("avatar")} />
+        ) : (
+          <Sparkles size={30} />
+        )}
+      </div>
+      <label>
+        {t("chooseAvatar")}
+        <input
+          type="file"
+          accept={(
+            app.config?.upload?.mime_types || [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+            ]
+          ).join(",")}
+          disabled={busy}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (!f) return;
+            const types = app.config?.upload?.mime_types || [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+            ];
+            if (
+              !types.includes(f.type) ||
+              f.size > (app.config?.upload?.max_bytes || 10485760)
+            ) {
+              app.setNotice(t("avatarInvalid"));
+              return;
+            }
+            setFile(f);
+            setRemove(false);
+          }}
+        />
+      </label>
+      <button
+        type="button"
+        className="pp-link"
+        disabled={busy}
+        onClick={() => {
+          setFile(null);
+          setRemove(true);
+        }}
+      >
+        {t("removeAvatar")}
+      </button>
+      <label>
+        {t("nickname")}
+        <input
+          value={nickname}
+          maxLength={40}
+          disabled={busy}
+          onChange={(e) => setNickname(e.target.value)}
+        />
+      </label>
+      <label>
+        {t("bio")}
+        <textarea
+          value={bio}
+          maxLength={500}
+          disabled={busy}
+          onChange={(e) => setBio(e.target.value)}
+        />
+      </label>
+      {failed && <p role="alert">{t("profileFailed")}</p>}
+      <button
+        type="submit"
+        className="pp-gradient-button pp-wide"
+        disabled={busy}
+      >
+        {t("saveProfile")}
+        <Check size={17} />
+      </button>
+    </form>
+  );
+}
+
+type Appeal = {
+  id: string;
+  version_id: string;
+  reason: string;
+  status: string;
+  created_at: number;
+};
+function AppealRecords({ app }: { app: AppContext }) {
+  const t = useText(app);
+  const [records, setRecords] = useState<Appeal[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [refresh, setRefresh] = useState(0);
+  const [works, setWorks] = useState<Version[] | null>(null);
+  const [worksFailed, setWorksFailed] = useState(false);
+  const [worksRefresh, setWorksRefresh] = useState(0);
+  const [selected, setSelected] = useState("");
+  useEffect(() => {
+    let active = true;
+    setWorks(null);
+    setWorksFailed(false);
+    setSelected("");
+    api<{ items: Version[] }>("/me/works?state=all")
+      .then((value) => {
+        if (!Array.isArray(value.items))
+          throw new Error("Invalid works response");
+        if (!active) return;
+        const owned = value.items.filter(
+          (work) => work.creator_id === app.user?.id,
+        );
+        setWorks(owned);
+        setSelected(owned[0]?.id || "");
+      })
+      .catch(() => {
+        if (active) setWorksFailed(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [app.user?.id, worksRefresh]);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [submitFailed, setSubmitFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setFailed(false);
+    api<{ items: Appeal[] }>("/me/appeals")
+      .then((value) => {
+        if (active) setRecords(value.items);
+      })
+      .catch(() => {
+        if (active) setFailed(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [app.user?.id, refresh]);
+  return (
+    <section className="pp-appeals">
+      <h3>{t("appeals")}</h3>
+      <p>{t("appealNote")}</p>
+      {failed ? (
+        <div role="alert">
+          <p>{t("loadError")}</p>
+          <button className="pp-link" onClick={() => setRefresh((v) => v + 1)}>
+            {t("retry")}
+          </button>
+        </div>
+      ) : records === null ? (
+        <p role="status">{t("loading")}</p>
+      ) : (
+        <>
+          {records.length ? (
+            <ul>
+              {records.map((record) => (
+                <li key={record.id}>
+                  <strong>{t("appealPending")}</strong>
+                  <p>{record.reason}</p>
+                  <small>
+                    {new Date(record.created_at * 1000).toLocaleString(
+                      app.locale,
+                    )}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>{t("appealEmpty")}</p>
+          )}
+          {worksFailed ? (
+            <div role="alert">
+              <p>{t("appealWorksError")}</p>
+              <button
+                className="pp-link"
+                onClick={() => setWorksRefresh((v) => v + 1)}
+              >
+                {t("retry")}
+              </button>
+            </div>
+          ) : works === null ? (
+            <p role="status">{t("loading")}</p>
+          ) : works.length ? (
+            <form
+              className="pp-profile-editor"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (
+                  busy ||
+                  !works.some((work) => work.id === selected) ||
+                  !reason.trim()
+                )
+                  return;
+                setBusy(true);
+                setSubmitFailed(false);
+                try {
+                  await post("/me/appeals", {
+                    version_id: selected,
+                    reason: reason.trim(),
+                  });
+                  setReason("");
+                  setRefresh((v) => v + 1);
+                  app.setNotice(t("appealSaved"));
+                } catch {
+                  setSubmitFailed(true);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              <label>
+                {t("appealVersion")}
+                <select
+                  disabled={busy}
+                  value={selected}
+                  onChange={(e) => setSelected(e.target.value)}
+                >
+                  {works.map((work) => (
+                    <option value={work.id} key={work.id}>
+                      {work.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {t("appealReason")}
+                <textarea
+                  disabled={busy}
+                  value={reason}
+                  maxLength={1000}
+                  onChange={(e) => setReason(e.target.value)}
+                />
+              </label>
+              {submitFailed && <p role="alert">{t("saveError")}</p>}
+              <button
+                className="pp-gradient-button pp-wide"
+                disabled={busy || !reason.trim()}
+              >
+                {t("appealSend")}
+              </button>
+            </form>
+          ) : (
+            <p>{t("noOwnedWorks")}</p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function ServerReset({
+  data,
+  locale,
+  t,
+}: {
+  data: Credits;
+  locale: string;
+  t: (key: Key) => string;
+}) {
+  let value = "";
+  if (
+    typeof data.next_reset_at === "number" &&
+    Number.isFinite(data.next_reset_at)
+  ) {
+    const date = new Date(data.next_reset_at * 1000);
+    if (!Number.isNaN(date.getTime())) {
+      try {
+        value = new Intl.DateTimeFormat(locale, {
+          dateStyle: "medium",
+          timeStyle: "short",
+          timeZone: data.timezone || "UTC",
+        }).format(date);
+      } catch {
+        value = date.toISOString();
+      }
+    }
+  }
+  return (
+    <div className="pp-reset-details">
+      {value && (
+        <p>
+          {t("resetAt")} ·{" "}
+          <time dateTime={new Date(data.next_reset_at! * 1000).toISOString()}>
+            {value}
+          </time>
+        </p>
+      )}
+      {data.timezone && (
+        <p>
+          {t("resetTimezone")} · {data.timezone}
+        </p>
+      )}
+      {value && <p>{t("resetPolicyNote")}</p>}
+    </div>
   );
 }

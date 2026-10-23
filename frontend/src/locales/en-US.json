@@ -230,5 +230,14 @@
   "landingVideoPlay": "Play design video",
   "closingKicker": "Your next scene starts here.",
   "landingVideoError": "This browser could not play the design video. Download the original MP4 to watch it in a supported player.",
-  "landingVideoDownload": "Download original design video (MP4)"
+  "landingVideoDownload": "Download original design video (MP4)",
+  "leaveJobConfirm": "Leave this active task? It will keep running. You can return from creation to check its status.",
+  "revealVersion": "Reveal this version",
+  "timeoutRecovery": "The server confirmed this task timed out. No successful result is available. Retry creates a new task using the original input.",
+  "refreshJobStatus": "Check task status again",
+  "chooseDirection": "Choose a direction and version",
+  "browseBranches": "Browse existing branches",
+  "noBranches": "No existing child versions yet. Continue this version to start a branch.",
+  "returnSelected": "Return to selected result",
+  "yourStoryWorlds": "Your private story worlds"
 }

@@ -230,5 +230,14 @@
   "landingVideoPlay": "体验视频效果",
   "closingKicker": "你的下一幕，自己来写。",
   "landingVideoError": "当前浏览器无法播放设计视频。请下载原始 MP4，使用支持的播放器观看。",
-  "landingVideoDownload": "下载原始设计视频（MP4）"
+  "landingVideoDownload": "下载原始设计视频（MP4）",
+  "leaveJobConfirm": "离开正在进行的任务？任务仍会继续，可以从创作页返回查看状态。",
+  "revealVersion": "看看发生了什么",
+  "timeoutRecovery": "服务器确认此次任务已超时，尚无成功结果。重试将保留原始输入并创建新任务。",
+  "refreshJobStatus": "重新查询任务状态",
+  "chooseDirection": "选择方向与版本",
+  "browseBranches": "浏览已有分支",
+  "noBranches": "还没有已有子版本，继续创作即可开启一条新分支。",
+  "returnSelected": "返回所选结果",
+  "yourStoryWorlds": "你的私人故事世界"
 }

@@ -576,7 +576,9 @@ export function JobTheater({
             ? "failed"
             : job?.status === "cancelled"
               ? "cancelled"
-              : "theaterTitle",
+              : job?.status === "succeeded"
+                ? "done"
+                : "theaterTitle",
         )}
       </h1>
       <p>

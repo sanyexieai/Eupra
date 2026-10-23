@@ -24,4 +24,11 @@ PY
  EUPRA_TEST_API=http://127.0.0.1:18787/api/v1 python3 qa/api_smoke.py
  kill "$PID"; wait "$PID" 2>/dev/null || true; PID=''
 done
+python3 qa/provider_security.py
+python3 qa/local_share_security.py
+python3 qa/private_assets_security.py
+python3 qa/personal_security.py
+python3 qa/verify_assets.py
+python3 qa/engine_eval/validate.py
+python3 -m unittest discover -s qa/engine_eval -p 'test_*.py'
 printf 'Checks passed. Isolated test database/logs: %s\n' "$DB_DIR"

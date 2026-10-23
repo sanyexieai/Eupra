@@ -1,6 +1,16 @@
 # QA report — engineering checkpoints
 
-## Latest tested application revision: v0.4 CN recovery loops
+## Latest tested application revision: final v0.4 visual refinement
+
+Exact tested application commit: `aeb203ccd8ae05a06dcb58e6ac7ccdebd3d5e3c8`.
+Run: https://github.com/sanyexieai/Eupra/actions/runs/39916874949 (success, 2026-10-23 07:22 UTC).
+
+- 24 Rust and 69 component tests; API 5+27 checks; provider/local-share/private-asset security; 18-asset provenance (16 originals plus 2 compatibility derivatives); 13 offline evaluation regressions passed.
+- 29 demo + 19 unconfigured real-browser checks passed, with 61 + 28 bilingual desktop/mobile-viewport captures. The final pale route chrome, website-only footer, settings header/navigation and mobile WEB content ordering are included in this exact application revision.
+- Artifact 12485641629 was downloaded and SHA256 verified: `16b2abed3feb01760e2f9705dcaafaa338f29b4a6a8905c9eb4f1d6902a5fa3e`, 48,233,238 bytes. `qa/DESIGN-FIDELITY.md` separates actual pixel review from functional acceptance.
+- Following documentation-only updates do not change application code. Do not transfer this pass to future code changes. Real models, quality, independent safety, production public sharing/export, video billing, deployment and GLOBAL remain unaccepted.
+
+## Previous v0.4 CN recovery-loop checkpoint
 
 Exact tested commit: `4ac763c494e604b684644d58d0966e26e10fa19e`.
 Run: https://github.com/sanyexieai/Eupra/actions/runs/39915775683 (success, 2026-10-23 07:11 UTC).
@@ -104,3 +114,7 @@ Date: 2026-10-23 UTC. Scope: local development implementation. No live model, pu
 - `python3 qa/browser_smoke.py demo` and `python3 qa/browser_smoke.py unavailable` run real browser tests in a compatible environment with Chromium/Playwright.
 
 Do not run test-account-creating scripts against production databases. Do not infer full MVP acceptance from this checkpoint.
+
+## Subsequent CN functional increment: local only
+
+28 Rust and 88 component tests/build pass. Provider, local-share, private-asset and new personal-control security scripts pass against isolated local databases. New checks cover profile/avatar ownership and malformed fields, safe account aggregates, immutable motion preferences, deleted-work denial, bounded private pending_local appeals, settings isolation and truthful disabled quota policy metadata. Browser harness now checks deliberate reveal, direct continuation, child navigation, query/filter/world search persistence, private profile/avatar, local appeal records and saved motion ideas. No runtime browser pass is claimed yet for this increment.

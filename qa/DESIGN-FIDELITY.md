@@ -1,6 +1,41 @@
 # Original design fidelity review
 
-## Current evidence and review boundary
+## Latest exact-head delta review: aeb203
+
+**Latest pixel evidence:** `aeb203ccd8ae05a06dcb58e6ac7ccdebd3d5e3c8`, reviewed 2026-10-23. [CI run 39916874949](https://github.com/sanyexieai/Eupra/actions/runs/39916874949) is reported successful by the implementation owner, with 24 Rust and 69 UI tests. The locally reviewed `ci-aeb203/browser-demo.json` and `browser-unavailable.json` independently record 29 demo / 19 unavailable browser checks and 61 / 28 captures. These CI facts are separate from the visual assessment.
+
+Comparison: `eupra-product-deliverables/design-comparison-aeb203/index.html` and `manifest.json`. This focused pass opened all **28 latest core runtime images**: 12 for detailed WEB01, CN02, CN03, CN06, CN07 and CN11 delta review, then the other 16 for header/footer regression checks. The 19 original-reference files are byte-identical to the previously inspected set; their limitations below still apply. No browser was launched, images altered or application code edited.
+
+**Result:** the targeted layout fixes are visibly present and substantially closer to the supplied designs. No critical visual regression or newly established unusable control was found. Remaining differences below are explicitly retained, not waived because CI passed. This is still not pixel-perfect fidelity, full-MVP acceptance, measured accessibility compliance or certification of unavailable production capabilities.
+
+### Observed final deltas
+
+| Area | Latest desktop/mobile evidence | Remaining limit |
+|---|---|---|
+| WEB01 how-to and video order | Mobile now uses compact **text-left / image-right rows** for all three how-to cards. Video copy, explanation and CTA precede the portrait player, matching source mobile ordering. Desktop retains its three illustrated columns, copy/art relay and side-by-side video section without visible new collision. | Gallery heading remains smaller/left-aligned, without original centered story progression, arrows or dedicated continuation CTA. Closing headline scale, copy, typography and detailed crops still differ. |
+| CN02 light navigation | Pale contextual header remains; **mobile bottom navigation is now pale**, eliminating the conspicuous dark band. Sample artwork, private-draft row and gradient CTA remain contained. Desktop keeps the coherent pale workbench. | An empty dark strip remains below the pale content at the document bottom, on desktop and mobile. Desktop upload well is still spacious. Fixed nav appearing across samples in a full-page image is not, by itself, an inaccessible-control defect. |
+| CN03 cancelled task | Header and outer desktop canvas are now pale, with no website marketing links/start button or website footer. Mobile also ends after its task actions, without the dark website footer. Taller theatre and explicit confirmed-cancel/no-result copy remain intact. | The two retry/start buttons still touch visually. Cancellation explanation repeats in headline/card/status; no running-state comparison is claimed. The full-width demo status strip remains intentionally visible. |
+| CN06 share/export surface | Pale header and desktop surroundings replace the dark website frame; website footer is removed at both sizes. Complete poster title still wraps correctly. Consent, production HOLD, disabled export and local-preview explanation remain visible and distinct. | A short dark empty tail remains below the pale **mobile** surface. Fine print remains small; this review does not remove safety disclosures for visual similarity. Disabled controls are intentionally subdued. |
+| CN07 participation panel | The duplicated full artwork paragraph is **removed** from the white panel. It now groups the local-preview restriction, primary continuation action and short selected-parent note. Website header links/start button and footer are removed; compact dark brand/locale/settings chrome remains. | Compact option chips/related-card grouping from the source are still absent. Only actual accessible records may be used; no fictional related works are required for parity. |
+| CN11 account/settings | **One pale header** replaces the dark website header plus repeated local “我的” heading. Pale bottom navigation and removal of the website footer make the account canvas continuous. Mobile email remains ellipsized with account action below; desktop email fits one line. Hero/setting rows stay contained. | **Current-tab cue is imperfect:** the mobile bar colors the first “开始创作” star purple while “我的 / 设置” remains gray, rather than emphasizing the current account tab. This is a visual-state issue, not a proven navigation failure. Tiny collage disclaimer, foreground overlap and oversized text-only recent cards remain. |
+| Other core task routes | Inspected CN01, CN04, CN05, CN08, CN09, CN10, CN12 and CN13 at both widths. Website marketing navigation/start button and website footer are absent from task screens; CN01's compact welcome remains intact. Primary actions, count panels, graph/contributor blocks, motion chips and quota segments show no new text collision or obvious clipping attributable to chrome removal. | Existing density, placeholder sizing, mixed old/new marks, CN09 right-only provenance stack and CN10 horizontally clipped graph viewport remain. Removing global chrome does not establish native desktop parity where no desktop reference exists. |
+
+### Final residual priorities, not new release blockers
+
+1. WEB01 gallery hierarchy/CTA and detailed typography still differ from the native desktop/mobile original. The mobile how-to and video-order issues described in the historical review **are now resolved**.
+2. CN11's pale bottom bar should identify the current account tab rather than accenting creation. Small dark bottom strips on CN02/mobile CN06 and touching CN03 buttons are cosmetic residuals, not grounds to claim this iteration is unusable.
+3. CN05 compact option-panel grouping, image-less card density, CN09/10 expanded provenance repetition, CN11 recent-card scale and CN13 decorative/current-work treatment remain as described in the historical audit. Do not fill real private works with mock sample imagery to conceal these differences.
+4. Asset framing, page-specific type scale and small-text readability still merit further design work. No numeric similarity percentage, contrast-ratio pass or physical-device result is claimed.
+
+The latest browser reports include scrolled CN02 sample/account-navigation hit tests, WEB01 and CN12 labelled example-video playback, and no browser JavaScript runtime errors. Those checks provide specific functional evidence; they do not certify every CN11 list item or every graph node at every scroll position. The fixed-navigation caution and source-state caveats remain applicable.
+
+**Freeze:** this addendum records only `aeb203` pixels. The prior `52c274` run remains failed in the historical record below; it is not retroactively relabelled as a pass. Original CN01–04 desktop files remain phone-showcase boards, CN05–13 still lack native desktop references, and cancelled/text-only/unavailable states remain intentional differences. Further optional visual polish is documented, not implemented in this review.
+
+## Historical full audit: 52c274
+
+The sections below preserve the complete earlier original comparison. Their “remaining” findings refer to `52c274`; the latest addendum above supersedes the specific fixes it marks resolved. They must not be read as claims that removed website footers, dark account chrome, WEB01 mobile card order or CN07's duplicate paragraph still exist at `aeb203`.
+
+### Historical evidence and review boundary
 
 **Pixel-reviewed application:** `52c27465e8e62883ace83c4dbaf556f87764c8d4`, reviewed 2026-10-23. Comparison bundle: `eupra-product-deliverables/design-comparison-52c274/index.html`; exact source paths and commit are in its `manifest.json`. This pass opened **all 28 runtime images** for WEB01 and CN01–13, **all 14 original mobile images**, and **all five desktop-labelled references**. Every row below is based on actual image pixels, not filenames or an overflow assertion.
 

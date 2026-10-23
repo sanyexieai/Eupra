@@ -43,7 +43,7 @@ jobs:
       - name: Provider contract and security regressions
         run: python3 qa/provider_security.py
       - name: Local sharing security and asset provenance
-        run: python3 qa/local_share_security.py && python3 qa/private_assets_security.py && python3 qa/verify_assets.py
+        run: python3 qa/local_share_security.py && python3 qa/private_assets_security.py && python3 qa/personal_security.py && python3 qa/verify_assets.py
       - name: Offline engine evaluation contract
         run: python3 qa/engine_eval/validate.py && python3 -m unittest discover -s qa/engine_eval -p "test_*.py"
       - name: Install browser test runtime

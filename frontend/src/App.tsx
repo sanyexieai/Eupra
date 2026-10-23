@@ -25,6 +25,7 @@ import {
   useParams,
   useLocation,
   useSearchParams,
+  useBlocker,
 } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -119,7 +120,7 @@ function Logo() {
   );
 }
 export default function App() {
-  const [locale, setLocale] = useState(
+  const [locale, applyLocale] = useState(
     localStorage.getItem("eupra.locale") === "en-US" ? "en-US" : "zh-CN",
   );
   const [config, setConfig] = useState<Config | null>(null);
@@ -137,6 +138,52 @@ export default function App() {
   const t = (k: Key) => (locale === "zh-CN" ? zh : en)[k] || k;
   const navigate = useNavigate();
   const location = useLocation();
+  const localeChoice = useRef(0);
+  const hydratedAccount = useRef<string | null>(null);
+  const preserveRegistrationLocale = useRef(false);
+  const setLocale = (next: string) => {
+    const normalized = next === "en" || next === "en-US" ? "en-US" : "zh-CN";
+    localeChoice.current++;
+    applyLocale(normalized);
+    if (user)
+      api("/me/settings", {
+        method: "PATCH",
+        body: JSON.stringify({ locale: normalized }),
+      }).catch(() =>
+        setNotice(
+          normalized === "zh-CN"
+            ? "语言已在本机切换，但账号偏好未保存。"
+            : "Language changed locally, but the account preference was not saved.",
+        ),
+      );
+  };
+  useEffect(() => {
+    if (!user) {
+      hydratedAccount.current = null;
+      return;
+    }
+    if (hydratedAccount.current === user.id) return;
+    hydratedAccount.current = user.id;
+    if (preserveRegistrationLocale.current) {
+      preserveRegistrationLocale.current = false;
+      return;
+    }
+    const choice = localeChoice.current;
+    let active = true;
+    api("/me/settings")
+      .then((settings) => {
+        if (
+          active &&
+          choice === localeChoice.current &&
+          ["zh-CN", "en", "en-US"].includes(settings.locale)
+        )
+          applyLocale(settings.locale === "zh-CN" ? "zh-CN" : "en-US");
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
   useEffect(() => {
     api<Config>("/config")
       .then(setConfig)
@@ -187,6 +234,22 @@ export default function App() {
       value={{
         locale,
         setLocale,
+        applyLocale,
+        preserveGuestLocale: async () => {
+          preserveRegistrationLocale.current = true;
+          try {
+            await api("/me/settings", {
+              method: "PATCH",
+              body: JSON.stringify({ locale }),
+            });
+          } catch {
+            setNotice(
+              locale === "zh-CN"
+                ? "账号已创建，但语言偏好未保存。"
+                : "Account created, but the language preference was not saved.",
+            );
+          }
+        },
         t,
         config,
         user,
@@ -332,15 +395,24 @@ function MobileNav() {
   if (!["/create", "/works", "/settings"].includes(loc.pathname)) return null;
   return (
     <div className="mobile-nav">
-      <Link to="/create">
+      <Link
+        to="/create"
+        aria-current={loc.pathname === "/create" ? "page" : undefined}
+      >
         <Sparkles size={20} />
         {t("start")}
       </Link>
-      <Link to="/works">
+      <Link
+        to="/works"
+        aria-current={loc.pathname === "/works" ? "page" : undefined}
+      >
         <FolderHeart size={20} />
         {t("navWorks")}
       </Link>
-      <Link to="/settings">
+      <Link
+        to="/settings"
+        aria-current={loc.pathname === "/settings" ? "page" : undefined}
+      >
         <Settings size={20} />
         {t("settings")}
       </Link>
@@ -830,7 +902,7 @@ function Create() {
   );
 }
 function AuthDialog() {
-  const { t, setAuth, setUser, setNotice } = useApp();
+  const { t, setAuth, setUser, setNotice, preserveGuestLocale } = useApp();
   const [register, setRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -877,6 +949,7 @@ function AuthDialog() {
         email,
         password,
       });
+      if (register) await preserveGuestLocale();
       setUser(r.user);
       setAuth(false);
     } catch {
@@ -1009,6 +1082,27 @@ function JobPage() {
   const [failed, setFailed] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [pollEpoch, setPollEpoch] = useState(0);
+  const activeJob = !!job && ["queued", "running"].includes(job.status);
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      activeJob && currentLocation.pathname !== nextLocation.pathname,
+  );
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      if (window.confirm(t("leaveJobConfirm"))) blocker.proceed();
+      else blocker.reset();
+    }
+  }, [blocker, locale]);
+  useEffect(() => {
+    if (!activeJob) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [activeJob]);
   useEffect(() => {
     let active = true;
     let terminal = false;
@@ -1024,7 +1118,6 @@ function JobPage() {
         terminal = ["succeeded", "failed", "cancelled"].includes(j.status);
         if (j.status === "succeeded" && j.version_id) {
           sessionStorage.removeItem("eupra.job");
-          navigate("/result/" + j.version_id, { replace: true });
         }
       } catch {
         if (active) setFailed(true);
@@ -1036,7 +1129,7 @@ function JobPage() {
       active = false;
       clearInterval(timer);
     };
-  }, [id]);
+  }, [id, pollEpoch]);
   return (
     <main className="page narrow job-page">
       <JobTheater
@@ -1087,6 +1180,24 @@ function JobPage() {
             : t(failed ? "offline" : "working")}
         </div>
         {job?.demo && <p className="inline-note">{t("demoMode")}</p>}
+        {job?.status === "succeeded" && job.version_id && (
+          <Btn
+            kind="primary"
+            onClick={() =>
+              navigate("/result/" + job.version_id, { replace: true })
+            }
+          >
+            {t("revealVersion")}
+          </Btn>
+        )}
+        {job?.status === "failed" && job.error?.code.includes("TIMEOUT") && (
+          <p role="alert">{t("timeoutRecovery")}</p>
+        )}
+        {failed && (
+          <Btn onClick={() => setPollEpoch((v) => v + 1)}>
+            {t("refreshJobStatus")}
+          </Btn>
+        )}
         {job?.error && (
           <p className="inline-note">
             {t("error")} ({job.error.code})
@@ -1151,8 +1262,29 @@ function JobPage() {
 }
 function Result({ details = false }: { details?: boolean }) {
   const { v, setV, err } = useVersion();
-  const { t, error, setNotice } = useApp();
+  const { t, error, setNotice, config, user, setAuth, locale, navigate } =
+    useApp();
   const [showSource, setShowSource] = useState(false);
+  const [continuing, setContinuing] = useState(false);
+  const [branchesOpen, setBranchesOpen] = useState(false);
+  const [branches, setBranches] = useState<Version[] | null>(null);
+  const [branchesFailed, setBranchesFailed] = useState(false);
+  useEffect(() => {
+    setBranches(null);
+    setBranchesFailed(false);
+    if (!branchesOpen || !v) return;
+    let active = true;
+    api("/versions/" + v.id + "/children")
+      .then((r) => {
+        if (active) setBranches(r.items);
+      })
+      .catch(() => {
+        if (active) setBranchesFailed(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [v?.id, branchesOpen]);
   if (err) return <Missing />;
   if (!v) return <Loading />;
   return (
@@ -1221,16 +1353,74 @@ function Result({ details = false }: { details?: boolean }) {
               )}
             </>
           )}
-          <Link
-            className={
-              "btn primary wide " + (!v.remix_allowed ? "disabled" : "")
-            }
-            to={"/remix/" + v.id}
+          <Btn
+            kind="primary wide"
+            disabled={continuing || !v.remix_allowed}
+            onClick={async () => {
+              if (continuing) return;
+              if (!config?.generation_enabled) {
+                setNotice(t("providerOff"));
+                return;
+              }
+              if (!user) {
+                setAuth(true);
+                return;
+              }
+              setContinuing(true);
+              try {
+                const next = await api<Job>("/generation-jobs", {
+                  method: "POST",
+                  headers: { "Idempotency-Key": crypto.randomUUID() },
+                  body: JSON.stringify({
+                    kind: "continuation",
+                    parent_version_id: v.id,
+                    locale: locale === "zh-CN" ? "zh-CN" : "en",
+                  }),
+                });
+                sessionStorage.setItem("eupra.job", next.id);
+                navigate("/jobs/" + next.id);
+              } catch (e) {
+                error(e);
+              } finally {
+                setContinuing(false);
+              }
+            }}
           >
             <RefreshCw size={19} />
             {t("push")}
             <ArrowRight size={20} />
+          </Btn>
+          <Link
+            className="text-button"
+            to={"/remix/" + v.id + "?version=" + encodeURIComponent(v.id)}
+          >
+            {t("chooseDirection")}
+            <ArrowUpRight size={16} />
           </Link>
+          <Btn onClick={() => setBranchesOpen((x) => !x)}>
+            {t("browseBranches")}
+          </Btn>
+          {branchesOpen && (
+            <section
+              className="inline-branches"
+              aria-label={t("browseBranches")}
+            >
+              {branchesFailed ? (
+                <p role="alert">{t("offline")}</p>
+              ) : branches === null ? (
+                <p>{t("working")}</p>
+              ) : branches.length ? (
+                <VersionStrip
+                  t={t}
+                  items={branches}
+                  selected=""
+                  onSelect={(id) => navigate("/result/" + id)}
+                />
+              ) : (
+                <p>{t("noBranches")}</p>
+              )}
+            </section>
+          )}
           <div className="result-actions">
             <Btn
               onClick={async () => {
@@ -1638,9 +1828,37 @@ function Works() {
   const [refresh, setRefresh] = useState(0);
   const [works, setWorks] = useState<Version[] | null>(null);
   const [failed, setFailed] = useState(false);
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [sort, setSort] = useState("newest");
+  const [params, setParams] = useSearchParams();
+  const savedParams = new URLSearchParams(
+    sessionStorage.getItem("eupra.works.filters") || "",
+  );
+  const query = params.get("q") ?? savedParams.get("q") ?? "";
+  const rawFilter = params.get("filter") ?? savedParams.get("filter") ?? "all";
+  const filter = ["all", "originals", "remixes", "favorites"].includes(
+    rawFilter,
+  )
+    ? rawFilter
+    : "all";
+  const sort =
+    (params.get("sort") ?? savedParams.get("sort")) === "oldest"
+      ? "oldest"
+      : "newest";
+  const changeFilters = (key: string, value: string) => {
+    const next = new URLSearchParams({ q: query, filter, sort });
+    next.set(key, value);
+    sessionStorage.setItem("eupra.works.filters", next.toString());
+    setParams(next, { replace: true });
+  };
+  const setQuery = (value: string) => changeFilters("q", value);
+  const setFilter = (value: string) => changeFilters("filter", value);
+  const setSort = (value: string) => changeFilters("sort", value);
+  const [worlds, setWorlds] = useState<{ id: string; title: string }[]>([]);
+  useEffect(() => {
+    if (user)
+      api("/me/story-worlds")
+        .then((r) => setWorlds(r.items || []))
+        .catch(() => setWorlds([]));
+  }, [user, refresh]);
   useEffect(() => {
     if (user)
       api("/me/works")
@@ -1652,7 +1870,13 @@ function Works() {
   const filtered = all
     .filter(
       (v) =>
-        (v.title + " " + v.caption)
+        (
+          v.title +
+          " " +
+          v.caption +
+          " " +
+          (worlds.find((w) => w.id === v.story_world_id)?.title || "")
+        )
           .toLowerCase()
           .includes(query.toLowerCase()) &&
         (filter === "all" ||
@@ -1826,6 +2050,18 @@ function Works() {
                         <ArrowUpRight size={16} />
                       </span>
                     </Link>
+                    <Link
+                      className="text-button work-growth"
+                      to={
+                        "/worlds/" +
+                        v.story_world_id +
+                        "?version=" +
+                        encodeURIComponent(v.id)
+                      }
+                    >
+                      <GitBranch size={15} />
+                      {t("viewWorld")}
+                    </Link>
                   </div>
                 </article>
               ))}
@@ -1842,7 +2078,8 @@ function Works() {
 }
 function Remix() {
   const { v, err } = useVersion();
-  const { t, locale, navigate, error } = useApp();
+  const { t, locale, navigate, error, config, user, setAuth, setNotice } =
+    useApp();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
@@ -1900,6 +2137,9 @@ function Remix() {
             {t("lineage")}
             <ArrowUpRight size={16} />
           </Link>
+          <Link className="text-button" to={"/result/" + current.id}>
+            {t("returnSelected")}
+          </Link>
           <textarea
             aria-label={t("remixHint")}
             className="dark-textarea"
@@ -1916,6 +2156,14 @@ function Remix() {
             disabled={busy || !current.remix_allowed}
             onClick={async () => {
               if (busy) return;
+              if (!config?.generation_enabled) {
+                setNotice(t("providerOff"));
+                return;
+              }
+              if (!user) {
+                setAuth(true);
+                return;
+              }
               setBusy(true);
               try {
                 const j = await api<Job>("/generation-jobs", {
@@ -1963,6 +2211,37 @@ function World() {
       { replace: true },
     );
   const [tab, setTab] = useState("worldView");
+  const [summary, setSummary] = useState<any>(null);
+  const [ownedWorlds, setOwnedWorlds] = useState<
+    { id: string; title: string; version_count: number }[] | null
+  >(null);
+  const [worldListFailed, setWorldListFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    if (user)
+      api("/me/story-worlds")
+        .then((r) => {
+          if (active) setOwnedWorlds(r.items);
+        })
+        .catch(() => {
+          if (active) setWorldListFailed(true);
+        });
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+  useEffect(() => {
+    let active = true;
+    if (user)
+      api("/me/creator-summary")
+        .then((r) => {
+          if (active) setSummary(r);
+        })
+        .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
   useEffect(() => {
     let alive = true;
     setItems(null);
@@ -2005,17 +2284,23 @@ function World() {
       {tab === "creatorView" ? (
         <>
           <div className="creator-profile">
-            <img src={asset("orb-mark.svg")} alt="" />
+            <img
+              src={summary?.profile?.avatar_url || asset("orb-mark.svg")}
+              alt=""
+            />
             <p className="eyebrow">{t("oneCreator")}</p>
-            <h1>{user?.email || t("creator")}</h1>
+            <h1>{summary?.profile?.nickname || user?.email || t("creator")}</h1>
             <p>{t("privateCreator")}</p>
+            {summary?.profile?.bio && (
+              <p className="creator-bio">{summary.profile.bio}</p>
+            )}
             <div className="library-stats">
               <div>
-                <strong>{items.length}</strong>
-                <span>{t("versionsInWorld")}</span>
+                <strong>{summary?.stats?.versions ?? "—"}</strong>
+                <span>{t("allWorks")}</span>
               </div>
               <div>
-                <strong>1</strong>
+                <strong>{summary?.stats?.worlds ?? "—"}</strong>
                 <span>{t("worldCount")}</span>
               </div>
             </div>
@@ -2024,6 +2309,43 @@ function World() {
               <ArrowRight size={18} />
             </Link>
           </div>
+          <section
+            className="creator-world-list"
+            aria-label={t("yourStoryWorlds")}
+          >
+            <h2>{t("yourStoryWorlds")}</h2>
+            {worldListFailed ? (
+              <p role="alert">{t("offline")}</p>
+            ) : ownedWorlds === null ? (
+              <p>{t("working")}</p>
+            ) : ownedWorlds.length ? (
+              <div>
+                {ownedWorlds.map((world) => (
+                  <Link
+                    key={world.id}
+                    to={"/worlds/" + world.id}
+                    onClick={() => setTab("worldView")}
+                    className={
+                      "creator-world-option " +
+                      (world.id === id ? "selected" : "")
+                    }
+                    aria-current={world.id === id ? "page" : undefined}
+                  >
+                    <GitBranch size={22} />
+                    <span>
+                      <strong>{world.title}</strong>
+                      <small>
+                        {world.version_count} · {t("versionsInWorld")}
+                      </small>
+                    </span>
+                    <ArrowUpRight size={17} />
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p>{t("empty")}</p>
+            )}
+          </section>
           <button
             className="world-feature creator-world"
             onClick={() => setTab("worldView")}
