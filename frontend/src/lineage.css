@@ -1,0 +1,176 @@
+.lineage-graph,
+.contribution-panel {
+  border: 1px solid #a18bc431;
+  border-radius: 22px;
+  background: #11172a;
+  padding: 20px;
+  margin-top: 25px;
+  min-width: 0;
+}
+.lineage-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #bea3e6;
+}
+.lineage-heading h3,
+.contribution-panel h3 {
+  margin: 0;
+  font-size: 17px;
+}
+.lineage-graph > p,
+.contribution-panel > p,
+.contribution-panel > div > p {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #9790ab;
+  margin: 10px 0;
+}
+.lineage-scroll {
+  max-width: 100%;
+  overflow: auto;
+  border-radius: 14px;
+  background: radial-gradient(ellipse at center, #29213966, transparent);
+  border: 1px solid #9785bd1c;
+}
+.lineage-canvas {
+  position: relative;
+}
+.lineage-canvas > svg {
+  position: absolute;
+  inset: 0;
+}
+.lineage-node {
+  position: absolute;
+  width: 190px;
+  height: 87px;
+  background: #20263c;
+  border: 1px solid #9f83c54d;
+  border-radius: 14px;
+  text-align: left;
+  padding: 11px 12px 11px 40px;
+  color: #e1d8ef;
+}
+.lineage-node > svg,
+.lineage-node > img {
+  position: absolute;
+  left: 11px;
+  top: 15px;
+  color: #ae93d2;
+}
+.lineage-node > img {
+  width: 23px;
+  height: 23px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.lineage-node strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.lineage-node small {
+  display: block;
+  font-size: 9px;
+  color: #9c8faf;
+  margin-top: 5px;
+}
+.lineage-node.selected {
+  border: 2px solid #c2a0ff;
+  background: #302843;
+}
+.lineage-node.private {
+  border-style: dashed;
+  background: #111729;
+  color: #9a95ab;
+}
+.lineage-edge-list {
+  list-style: none;
+  padding: 0;
+  margin: 15px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #958ca9;
+}
+.lineage-edge-list li {
+  overflow-wrap: anywhere;
+}
+.lineage-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.lineage-privacy svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.contribution-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+.contribution-cards > div {
+  border: 1px solid #a58cc92b;
+  border-radius: 14px;
+  padding: 15px 12px;
+  background: #1a1e32;
+  min-width: 0;
+}
+.contribution-cards svg {
+  color: #b599dd;
+  margin-bottom: 12px;
+}
+.contribution-cards small {
+  font-size: 10px;
+  color: #9285a6;
+  display: block;
+}
+.contribution-cards strong {
+  font-size: 12px;
+  display: block;
+  margin-top: 7px;
+}
+.contribution-cards code {
+  display: block;
+  font-size: 9px;
+  color: #867d99;
+  overflow-wrap: anywhere;
+  margin-top: 8px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 760px) {
+  .lineage-graph,
+  .contribution-panel {
+    padding: 16px;
+    border-radius: 18px;
+  }
+  .contribution-cards {
+    gap: 7px;
+  }
+  .contribution-cards > div {
+    padding: 12px 9px;
+  }
+  .contribution-cards strong {
+    font-size: 11px;
+  }
+  .contribution-cards code {
+    font-size: 8px;
+  }
+}

@@ -1,3 +1,9 @@
+import { ExportPanel } from "./ExportPanel";
+import {
+  LineageGraph,
+  ContributionCards,
+  type AncestorReference,
+} from "./LineageGraph";
 import { CreationWorkbench, JobTheater } from "./CreationPanels";
 import { ProfileSettings, VideoStudio, VideoBalance } from "./PersonalPanels";
 import { VersionVisual, VersionStrip } from "./VersionExplorer";
@@ -17,6 +23,7 @@ import {
   useNavigate,
   useParams,
   useLocation,
+  useSearchParams,
 } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -1031,7 +1038,15 @@ function Result({ details = false }: { details?: boolean }) {
               {t("video")}
             </Link>
           </div>
-          <Link className="lineage-link" to={"/worlds/" + v.story_world_id}>
+          <Link
+            className="lineage-link"
+            to={
+              "/worlds/" +
+              v.story_world_id +
+              "?version=" +
+              encodeURIComponent(v.id)
+            }
+          >
             <GitBranch size={22} />
             <div>
               <strong>{t("world")}</strong>
@@ -1101,109 +1116,11 @@ function Result({ details = false }: { details?: boolean }) {
   );
 }
 function SharePage() {
+  const app = useApp();
   const { v, err } = useVersion();
-  const { t, error, setNotice, config } = useApp();
-  const [url, setUrl] = useState("");
-  const [linkId, setLinkId] = useState("");
-  const [reviewed, setReviewed] = useState(false);
-  const [busy, setBusy] = useState(false);
   if (err) return <Missing />;
   if (!v) return <Loading />;
-  const local =
-    !!config?.features.local_review &&
-    !!config?.features.share_preview &&
-    v.demo &&
-    !v.image_url;
-  return (
-    <main className="page narrow">
-      <PageTitle title="shareTitle" />
-      <div className="share-preview">
-        {v.image_url ? (
-          <img className="share-art-image" src={v.image_url} alt={v.title} />
-        ) : (
-          <img src={asset("orb-mark.svg")} alt="" />
-        )}
-        <h2>{v.title}</h2>
-        <p>{v.caption}</p>
-        <span>{t(v.demo ? "textDemo" : "aiLabel")}</span>
-      </div>
-      <p className="inline-note">
-        <Lock size={18} />
-        {t("shareHold")}
-      </p>
-      {local && (
-        <div className="local-review-panel">
-          <h3>{t("localPreview")}</h3>
-          <p>{t("localPreviewNote")}</p>
-          <label>
-            <input
-              type="checkbox"
-              checked={reviewed}
-              onChange={(e) => setReviewed(e.target.checked)}
-            />
-            <span>{t("reviewConfirm")}</span>
-          </label>
-        </div>
-      )}
-      <Btn
-        kind="primary wide"
-        disabled={busy || (local && !reviewed && !url)}
-        onClick={async () => {
-          if (busy) return;
-          setBusy(true);
-          try {
-            if (url) {
-              await navigator.clipboard.writeText(url);
-              setNotice(t("copied"));
-              return;
-            }
-            if (local)
-              await post("/versions/" + v.id + "/local-review", {
-                approved: true,
-              });
-            const r = await post("/share-links", { version_id: v.id });
-            setLinkId(r.id);
-            setUrl(new URL("/s/" + r.token, window.location.origin).href);
-          } catch (e) {
-            error(e);
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        <Share2 size={18} />
-        {t(url ? "copyLink" : local ? "createPreview" : "makeLink")}
-      </Btn>
-      {url && (
-        <>
-          <input
-            aria-label={t("localPreview")}
-            className="share-url"
-            value={url}
-            readOnly
-          />
-          <a href={url} className="text-button">
-            {t("openPreview")}
-            <ArrowUpRight size={15} />
-          </a>
-          <Btn
-            onClick={async () => {
-              try {
-                await post("/share-links/" + linkId + "/revoke");
-                setUrl("");
-                setLinkId("");
-                setNotice(t("revoked"));
-              } catch (e) {
-                error(e);
-              }
-            }}
-          >
-            {t("revokePreview")}
-          </Btn>
-        </>
-      )}
-    </main>
-  );
+  return <ExportPanel app={app} version={v} />;
 }
 function PublicShare() {
   const { token } = useParams();
@@ -1629,10 +1546,18 @@ function Remix() {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
-  const [selected, setSelected] = useState("");
+  const [params, setParams] = useSearchParams();
+  const selected = params.get("version") || v?.id || "";
+  const setSelected = (id: string) =>
+    setParams(
+      (p) => {
+        p.set("version", id);
+        return p;
+      },
+      { replace: true },
+    );
   useEffect(() => {
     if (v) {
-      setSelected(v.id);
       api("/story-worlds/" + v.story_world_id)
         .then((r) =>
           setVersions(
@@ -1662,7 +1587,15 @@ function Remix() {
             selected={current.id}
             onSelect={setSelected}
           />
-          <Link className="text-button" to={"/worlds/" + v.story_world_id}>
+          <Link
+            className="text-button"
+            to={
+              "/worlds/" +
+              v.story_world_id +
+              "?version=" +
+              encodeURIComponent(current.id)
+            }
+          >
             <GitBranch size={16} />
             {t("lineage")}
             <ArrowUpRight size={16} />
@@ -1715,25 +1648,46 @@ function Remix() {
 }
 function World() {
   const { id } = useParams();
-  const { t, user } = useApp();
+  const { t, user, locale } = useApp();
   const [items, setItems] = useState<Version[] | null>(null);
   const [err, setErr] = useState(false);
-  const [selected, setSelected] = useState("");
+  const [references, setReferences] = useState<AncestorReference[]>([]);
+  const [params, setParams] = useSearchParams();
+  const selected = params.get("version") || "";
+  const setSelected = (id: string) =>
+    setParams(
+      (p) => {
+        p.set("version", id);
+        return p;
+      },
+      { replace: true },
+    );
   const [tab, setTab] = useState("worldView");
   useEffect(() => {
+    let alive = true;
+    setItems(null);
+    setErr(false);
+    setReferences([]);
     api("/story-worlds/" + id)
       .then((r) => {
+        if (!alive) return;
         const sorted = [...r.items].sort(
           (a: Version, b: Version) => a.depth - b.depth,
         );
         setItems(sorted);
-        setSelected(sorted[sorted.length - 1]?.id || "");
+        setReferences(r.ancestor_references || []);
       })
-      .catch(() => setErr(true));
+      .catch(() => {
+        if (alive) setErr(true);
+      });
+    return () => {
+      alive = false;
+    };
   }, [id]);
   if (err) return <Missing />;
   if (!items) return <Loading />;
-  const current = items.find((v) => v.id === selected) || items[0];
+  const current =
+    items.find((v) => v.id === selected) || items[items.length - 1];
   if (!current) return <Missing />;
   return (
     <main className="page world-page">
@@ -1826,6 +1780,18 @@ function World() {
             selected={current.id}
             onSelect={setSelected}
           />
+          <LineageGraph
+            versions={items}
+            references={references}
+            selected={current.id}
+            onSelect={setSelected}
+            locale={locale}
+          />
+          <ContributionCards
+            versionId={current.id}
+            locale={locale}
+            currentUserId={user?.id}
+          />
           <h2 className="world-section-title">{t("lineage")}</h2>
           <div className="world-timeline">
             {items.map((v, i) => (
@@ -1868,11 +1834,16 @@ function World() {
 }
 
 function VersionLineage({ v }: { v: Version }) {
-  const { t, navigate } = useApp();
+  const { t, navigate, locale, user } = useApp();
   const [nodes, setNodes] = useState<Version[]>([]);
+  const [references, setReferences] = useState<AncestorReference[]>([]);
   useEffect(() => {
+    let alive = true;
+    setNodes([v]);
+    setReferences([]);
     api("/story-worlds/" + v.story_world_id)
       .then((r) => {
+        if (!alive) return;
         const all: Version[] = r.items;
         const path: Version[] = [];
         let cursor: Version | undefined = v;
@@ -1884,8 +1855,21 @@ function VersionLineage({ v }: { v: Version }) {
           cursor = all.find((n) => n.id === parent);
         }
         setNodes(path);
+        setReferences(
+          (r.ancestor_references || []).filter((ref: AncestorReference) =>
+            path.some(
+              (n) =>
+                n.parent_version_id === ref.id || n.root_version_id === ref.id,
+            ),
+          ),
+        );
       })
-      .catch(() => setNodes([v]));
+      .catch(() => {
+        if (alive) setNodes([v]);
+      });
+    return () => {
+      alive = false;
+    };
   }, [v.id]);
   return (
     <div className="detail-lineage">
@@ -1895,6 +1879,18 @@ function VersionLineage({ v }: { v: Version }) {
         items={nodes}
         selected={v.id}
         onSelect={(id) => navigate("/versions/" + id)}
+      />
+      <LineageGraph
+        versions={nodes}
+        references={references}
+        selected={v.id}
+        onSelect={(id) => navigate("/versions/" + id)}
+        locale={locale}
+      />
+      <ContributionCards
+        versionId={v.id}
+        locale={locale}
+        currentUserId={user?.id}
       />
       <p className="fineprint">{t("accurateParent")}</p>
     </div>

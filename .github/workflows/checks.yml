@@ -47,7 +47,7 @@ jobs:
       - name: Offline engine evaluation contract
         run: python3 qa/engine_eval/validate.py && python3 -m unittest discover -s qa/engine_eval -p "test_*.py"
       - name: Install browser test runtime
-        run: pip install 'playwright>=1.48,<2' && python3 -m playwright install --with-deps chromium
+        run: pip install 'playwright>=1.48,<2' && python3 -m playwright install --with-deps chromium && sudo apt-get install -y fonts-noto-cjk
       - name: Real browser flows (demo)
         run: python3 qa/browser_smoke.py demo
       - name: Real browser flows (unconfigured)

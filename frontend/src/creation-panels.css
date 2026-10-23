@@ -443,7 +443,11 @@
   line-height: 1.7;
   color: #9b749f;
   text-align: center;
-  margin: 17px 0 0;
+  margin: 0 0 12px;
+  padding: 11px 13px;
+  border: 1px solid #e8d9ec;
+  border-radius: 13px;
+  background: #f6edf8;
 }
 .cp-workbench button:disabled {
   opacity: 0.5;
@@ -859,4 +863,26 @@
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+/* Scope above the legacy create-page workbench so its padding cannot return. */
+.create-page .cp-workbench.workbench {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+@media (max-width: 650px) {
+  /* A flow CTA keeps sample controls visible instead of painting over them. */
+  .create-page .cp-create-action {
+    position: static;
+    margin-top: 22px;
+    padding-top: 0;
+    background: transparent;
+  }
+}
+/* Keep the action in document flow at every width; no translucent overlay. */
+.create-page .cp-create-action {
+  position: static;
+  padding-top: 0;
+  background: transparent;
 }

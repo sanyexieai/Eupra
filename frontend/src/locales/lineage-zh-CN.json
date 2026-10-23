@@ -1,0 +1,22 @@
+{
+  "graphTitle": "故事分支图",
+  "graphNote": "连线只表示真实的直接父子关系。选择一个可访问的节点，继续它的故事。",
+  "scrollGraph": "横向浏览故事分支图",
+  "privateAncestor": "私密祖先版本",
+  "contentUnavailable": "内容不可访问",
+  "branch": "衍生节点",
+  "root": "原创起点",
+  "leadsTo": "衍生为",
+  "privacyNote": "保留来源关系，不展示他人的私密标题、素材或故事记忆。",
+  "contributionTitle": "创作贡献关系",
+  "contributionNote": "仅展示服务端记录的来源角色，不代表收益资格或分账。",
+  "rootCreator": "原创贡献者",
+  "parentCreator": "父版本贡献者",
+  "currentCreator": "当前创作者",
+  "you": "你",
+  "creatorId": "创作者标识",
+  "unavailable": "暂时无法读取贡献关系。",
+  "retry": "重试",
+  "loading": "正在读取真实贡献记录…",
+  "noRecord": "此版本暂无可用贡献记录。"
+}

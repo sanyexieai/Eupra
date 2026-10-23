@@ -392,7 +392,20 @@ export function CreationWorkbench({ app }: { app: App }) {
         <p className="cp-sample-label">{c("sampleLabel")}</p>
       </section>
       <div className="cp-create-action">
-        <button disabled={busy || loadingSample} onClick={submit}>
+        {config && !config.generation_enabled && (
+          <div className="cp-provider-note" id="creation-provider-status">
+            {t("providerOff")}
+          </div>
+        )}
+        <button
+          aria-describedby={
+            config && !config.generation_enabled
+              ? "creation-provider-status"
+              : undefined
+          }
+          disabled={busy || loadingSample}
+          onClick={submit}
+        >
           {busy || loadingSample ? (
             <LoaderCircle className="spin" size={21} />
           ) : (
@@ -406,9 +419,6 @@ export function CreationWorkbench({ app }: { app: App }) {
           {c("free")}
         </p>
       </div>
-      {config && !config.generation_enabled && (
-        <p className="cp-provider-note">{t("providerOff")}</p>
-      )}
     </div>
   );
 }
@@ -450,7 +460,17 @@ export function JobTheater({
               : "theaterTitle",
         )}
       </h1>
-      <p>{c("theaterBody")}</p>
+      <p>
+        {c(
+          job?.status === "cancelled"
+            ? "cancelledBody"
+            : job?.status === "failed"
+              ? "failedBody"
+              : job?.status === "succeeded"
+                ? "doneBody"
+                : "theaterBody",
+        )}
+      </p>
       <div className={"cp-theater " + (terminal ? "terminal" : "")}>
         <div className="cp-theater-source">
           {sourcePreview ? (
@@ -475,7 +495,15 @@ export function JobTheater({
         <i className="cp-floating pane-b" />
         <i className="cp-floating pane-c" />
         <img className="cp-theater-logo" src="/assets/logo.png" alt="" />
-        <span className="cp-theater-secret">{c("hidden")}</span>
+        <span className="cp-theater-secret">
+          {c(
+            terminal
+              ? job?.status === "succeeded"
+                ? "done"
+                : "stopped"
+              : "hidden",
+          )}
+        </span>
         <div className="cp-sound-bars" aria-hidden="true">
           {[0, 1, 2, 3, 4, 5].map((i) => (
             <i key={i} />

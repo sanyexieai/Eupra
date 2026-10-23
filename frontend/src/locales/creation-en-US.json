@@ -38,5 +38,9 @@
   "confirmCancel": "Cancel this generation?",
   "confirmBody": "Cancellation is confirmed by the server. Your input is kept so you can create again.",
   "keepWaiting": "Keep waiting",
-  "cancel": "Confirm cancellation"
+  "cancel": "Confirm cancellation",
+  "cancelledBody": "The server confirmed cancellation. No result is being generated.",
+  "failedBody": "The task did not finish. Check the error details before creating again.",
+  "stopped": "This task has stopped",
+  "doneBody": "The server returned a result. Opening the work."
 }

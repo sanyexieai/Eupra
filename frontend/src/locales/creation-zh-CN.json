@@ -38,5 +38,9 @@
   "confirmCancel": "取消这次生成？",
   "confirmBody": "取消结果以服务器确认为准。你的输入会保留，之后可以重新创作。",
   "keepWaiting": "继续等待",
-  "cancel": "确认取消"
+  "cancel": "确认取消",
+  "cancelledBody": "任务已由服务器确认取消，没有结果正在生成。",
+  "failedBody": "任务未能完成，请检查错误说明后重新创作。",
+  "stopped": "本次任务已停止",
+  "doneBody": "服务器已返回结果，即将打开作品。"
 }

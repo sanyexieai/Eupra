@@ -1142,3 +1142,28 @@
     transition: none !important;
   }
 }
+/* Keep account identity readable without letting the action compress it. */
+@media (max-width: 650px) {
+  .pp-profile .pp-profile-heading {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+  }
+  .pp-profile .pp-profile-heading > div:nth-child(2) {
+    width: 100%;
+  }
+  .pp-profile .pp-profile-heading h1 {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.5;
+    font-size: 18px;
+  }
+  .pp-profile .pp-profile-heading > .pp-light-button {
+    grid-column: 2;
+    justify-self: start;
+    margin-left: 0;
+  }
+}

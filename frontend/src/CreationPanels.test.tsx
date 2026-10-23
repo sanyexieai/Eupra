@@ -122,6 +122,11 @@ describe("creation design integration", () => {
     render(<Fixture config={{ ...cfg, generation_enabled: false }} />);
     fireEvent.click(screen.getByRole("button", { name: en.happen }));
     expect(notice).toHaveBeenCalledWith(en.providerOff);
+    const submit = screen.getByRole("button", { name: en.happen });
+    expect(submit.getAttribute("aria-describedby")).toBe(
+      "creation-provider-status",
+    );
+    expect(submit.parentElement?.textContent).toContain(en.providerOff);
     expect(api).not.toHaveBeenCalled();
   });
   it("does not advance theater stages with elapsed time or invent a source", () => {

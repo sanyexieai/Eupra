@@ -1,5 +1,25 @@
 # QA report — engineering checkpoints
 
+## First successful CI browser execution
+
+Exact tested commit: `9094403202945e6fb1d1ee577efda46f023640dd`.
+Run: https://github.com/sanyexieai/Eupra/actions/runs/39906250531 (success, 2026-10-23 05:34 UTC).
+
+- GitHub-hosted Chromium executed real frontend and Rust API, without API mocks: 18 demo-mode checks and 12 unavailable-mode checks passed.
+- 44 full-page screenshots cover desktop 1440×1000 and mobile 390×844, including all CN01–13 core routes in demo mode (CN03 actual terminal cancellation), WEB01 and official example.
+- Verified registration, draft/locale retention, generation/immutable continuation, favorite persistence/search/filter, historical-parent selection, local share privacy/login gate, no generated image claims, configured-default refusal, three actual sample inputs and camera file fallback.
+- Verified actual downloadable official-example PNG (1080×1500 at this commit). Later fidelity changes require a new run; this does not certify the later 1080×1350 implementation.
+- No horizontal page overflow or browser JavaScript runtime errors in those checks. This is desktop Chromium with a mobile viewport, not a physical-device or cross-browser pass.
+- Rust 19, component 29, API 5+27, provider/local-sharing security, 15-asset provenance and 13 offline evaluation regression checks also passed in the same CI run.
+- Artifact: https://github.com/sanyexieai/Eupra/actions/runs/39906250531/artifacts/12480398320 . Downloaded archive SHA256 `2e3828272795c0f1199b39735f570c28076df8397c14291fd425544d134fa853` (22,136,579 bytes).
+- Actual pixel inspection found a too-narrow mobile profile identity column and contradictory cancelled-state copy. Sticky creation controls overlapping the sample heading require viewport/scroll qualification, not a claim of unreachable controls. These were not caught by no-overflow assertions; fixes and a new exact-head run are pending. See `VISUAL-REVIEW.md`.
+
+The first run (`22e09fa`) failed at Rust installer argument parsing before application tests. The toolchain-install command was corrected; no result from that failed run is counted as a pass.
+
+## Latest local follow-on check (2026-10-23 05:39 UTC)
+
+Frontend production build and 41 component tests pass after graph/attribution, 4:5 export preview and visual fixes. New Chinese+English exact-head browser validation is pending; earlier CI certifies only9094403.
+
 ## Second pass (2026-10-23, before CI)
 
 - Aggregate local check: 19 Rust tests and Rust build; 29 Vitest/jsdom tests and TypeScript/Vite production build passed.

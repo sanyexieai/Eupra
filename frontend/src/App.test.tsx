@@ -432,4 +432,47 @@ describe("unified application integration", () => {
       expect(screen.queryByText("Local preview reviewed")).toBeNull();
     },
   );
+  it("restores selected version from world query and preserves it in remix return", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    const child = {
+      ...version,
+      id: "v2",
+      parent_version_id: "v1",
+      depth: 1,
+      title: "Child node",
+    };
+    call.mockImplementation(async (path: string) => {
+      if (path === "/config") return cfg;
+      if (path === "/auth/me") return { user: { id: "u1" } };
+      if (path === "/story-worlds/world1")
+        return { items: [child, version], ancestor_references: [] };
+      if (path === "/versions/v2") return child;
+      if (path.endsWith("/contributions")) return { record_available: false };
+      throw Error(path);
+    });
+    const view = mount("/worlds/world1?version=v1");
+    await screen.findByRole("group", { name: "Browse story versions" });
+    expect(
+      document.querySelector(".version-strip button[aria-pressed=true]")
+        ?.textContent,
+    ).toContain("A test concept");
+    expect(
+      document
+        .querySelector(".world-context a.btn.primary")
+        ?.getAttribute("href"),
+    ).toBe("/remix/v1");
+    view.unmount();
+    mount("/remix/v2?version=v1");
+    await waitFor(() =>
+      expect(
+        document.querySelector(".version-strip button[aria-pressed=true]")
+          ?.textContent,
+      ).toContain("A test concept"),
+    );
+    expect(
+      screen
+        .getByRole("link", { name: "Version lineage" })
+        .getAttribute("href"),
+    ).toBe("/worlds/world1?version=v1");
+  });
 });

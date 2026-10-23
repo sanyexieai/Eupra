@@ -17,12 +17,13 @@ export function VersionVisual({
         <img src={v.image_url} alt={v.title} />
       ) : (
         <div className="text-concept-visual">
-          <img src={asset("orb-mark.svg")} alt="" />
-          <span>{t(v.demo ? "textDemo" : "conceptOnly")}</span>
+          <img src={asset("logo.png")} alt="" />
         </div>
       )}
       <div className="version-visual-copy">
-        <small>{t(v.demo ? "textDemo" : "aiLabel")}</small>
+        <small>
+          {t(v.demo ? "textDemo" : v.image_url ? "aiLabel" : "conceptOnly")}
+        </small>
         <h2>{v.title}</h2>
         {large && <p>{v.caption}</p>}
       </div>

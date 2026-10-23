@@ -9,28 +9,28 @@ export async function downloadExamplePoster(
   await image.decode();
   const canvas = document.createElement("canvas");
   canvas.width = 1080;
-  canvas.height = 1500;
+  canvas.height = 1350;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw Error("canvas");
   ctx.fillStyle = "#080b18";
-  ctx.fillRect(0, 0, 1080, 1500);
-  const scale = Math.max(1080 / image.width, 1080 / image.height);
+  ctx.fillRect(0, 0, 1080, 1350);
+  const scale = Math.max(1080 / image.width, 980 / image.height);
   const w = image.width * scale,
     h = image.height * scale;
-  ctx.drawImage(image, (1080 - w) / 2, (1080 - h) / 2, w, h);
-  const grad = ctx.createLinearGradient(0, 700, 0, 1100);
+  ctx.drawImage(image, (1080 - w) / 2, (980 - h) / 2, w, h);
+  const grad = ctx.createLinearGradient(0, 650, 0, 1000);
   grad.addColorStop(0, "#080b1800");
   grad.addColorStop(1, "#080b18");
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 700, 1080, 400);
+  ctx.fillRect(0, 650, 1080, 400);
   ctx.fillStyle = "#d9b7ff";
   ctx.font = "24px sans-serif";
-  ctx.fillText(t("posterLabel"), 55, 1140);
+  ctx.fillText(t("posterLabel"), 55, 1040);
   ctx.fillStyle = "#fff";
   ctx.font = "bold 48px sans-serif";
   const title = t(moon ? "moon" : "ceo");
   let line = "",
-    y = 1220;
+    y = 1120;
   for (const c of title) {
     if (ctx.measureText(line + c).width > 960) {
       ctx.fillText(line, 55, y);
@@ -42,7 +42,7 @@ export async function downloadExamplePoster(
   ctx.fillText(line, 55, y);
   ctx.fillStyle = "#a59bb8";
   ctx.font = "25px sans-serif";
-  ctx.fillText(t("posterBrand"), 55, 1440);
+  ctx.fillText(t("posterBrand"), 55, 1290);
   const blob = await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(Error("blob"))), "image/png"),
   );

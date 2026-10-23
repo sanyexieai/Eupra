@@ -1,0 +1,22 @@
+{
+  "graphTitle": "Story branch graph",
+  "graphNote": "Edges show actual direct parent-child relationships. Select an accessible node to continue its story.",
+  "scrollGraph": "Scroll the story branch graph",
+  "privateAncestor": "Private ancestor",
+  "contentUnavailable": "Content unavailable",
+  "branch": "Branch version",
+  "root": "Original root",
+  "leadsTo": "leads to",
+  "privacyNote": "Source relationships are retained without revealing private titles, images or story memory.",
+  "contributionTitle": "Creative contributions",
+  "contributionNote": "Roles come from server records. They do not imply earnings eligibility or revenue splits.",
+  "rootCreator": "Root creator",
+  "parentCreator": "Parent creator",
+  "currentCreator": "Current creator",
+  "you": "You",
+  "creatorId": "Creator identifier",
+  "unavailable": "Contribution records are temporarily unavailable.",
+  "retry": "Retry",
+  "loading": "Loading recorded contributions…",
+  "noRecord": "No contribution record is available for this version."
+}
