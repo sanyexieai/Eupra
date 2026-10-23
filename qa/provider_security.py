@@ -136,6 +136,20 @@ def main():
                 assert status == 200 and len(works['items']) == 1, works
                 assert '/must-not-follow' not in seen, seen
                 assert works['items'][0]['safety_state'] == 'HOLD'
+                # A provider response arriving after parent trash must never commit a child.
+                status, _, _ = request('/versions/'+vid+'/remix-permission', {'remix_allowed':True}, cookie, method='PATCH')
+                assert status == 200
+                started.clear();release.clear()
+                jid = create('delay-delete', vid)
+                assert started.wait(5)
+                status, _, _ = request('/versions/'+vid, cookie=cookie, method='DELETE')
+                assert status == 200
+                release.set()
+                job = terminal(jid)
+                assert job['status'] == 'failed' and job['error']['code'] == 'PARENT_UNAVAILABLE', job
+                assert request('/me/works', cookie=cookie)[1]['items'] == []
+                assert len(request('/me/works?state=trash', cookie=cookie)[1]['items']) == 1
+
                 print('PASS: provider wire success, request binding, safety hold, URL/image rejection, redirect rejection, immutable memory, in-flight cancellation/revocation, no orphan versions or secret leakage')
             finally:
                 release.set()

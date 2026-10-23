@@ -14,7 +14,7 @@ import {
   Sparkles,
   Video,
 } from "lucide-react";
-import { post, type Config, type Version } from "./api";
+import { api, post, type Config, type Version } from "./api";
 import zh from "./locales/export-zh-CN.json";
 import en from "./locales/export-en-US.json";
 import "./export-panel.css";
@@ -83,6 +83,27 @@ export function ExportPanel({ app, version }: { app: App; version: Version }) {
   } | null>(null);
   const [revoked, setRevoked] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const [permission, setPermission] = useState<
+    "loading" | "hold" | "unavailable" | "noDelivery"
+  >("loading");
+  useEffect(() => {
+    let active = true;
+    setPermission("loading");
+    const load = async () => {
+      try {
+        const response = await api<{ allowed: boolean; reason?: string }>(
+          "/versions/" + encodeURIComponent(version.id) + "/export-permission",
+        );
+        if (active) setPermission(response.allowed ? "noDelivery" : "hold");
+      } catch {
+        if (active) setPermission("unavailable");
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [version.id]);
   useEffect(() => {
     setReviewed(false);
     setLink(null);
@@ -205,6 +226,17 @@ export function ExportPanel({ app, version }: { app: App; version: Version }) {
           <div className="ep-export-explanation" id="personal-export-reason">
             <strong>{c("exportOff")}</strong>
             <p>{c("exportBody")}</p>
+            <p className="ep-permission-status" aria-live="polite">
+              {c(
+                permission === "loading"
+                  ? "permissionLoading"
+                  : permission === "hold"
+                    ? "permissionHold"
+                    : permission === "noDelivery"
+                      ? "permissionNoDelivery"
+                      : "permissionUnavailable",
+              )}
+            </p>
           </div>
           {local && (
             <div className="ep-review local-review-panel">
@@ -322,6 +354,40 @@ export function ExportPanel({ app, version }: { app: App; version: Version }) {
           </p>
         </div>
       </section>
+    </main>
+  );
+}
+
+export function ShareUnavailable({
+  locale,
+  errorCode,
+  onRetry,
+}: {
+  locale: string;
+  errorCode?: string;
+  onRetry?: () => void;
+}) {
+  const c = text(locale);
+  const disabled =
+    errorCode === "SAFETY_HOLD" || errorCode === "FEATURE_DISABLED";
+  return (
+    <main className="ep-page ep-unavailable">
+      <div className="ep-unavailable-mark">
+        <Lock size={30} />
+      </div>
+      <h1>{c(disabled ? "shareDisabledTitle" : "shareUnavailableTitle")}</h1>
+      <p>{c(disabled ? "shareDisabledBody" : "shareUnavailableBody")}</p>
+      <div>
+        {onRetry && (
+          <button className="ep-link-button" onClick={onRetry}>
+            {c("retry")}
+          </button>
+        )}
+        <Link className="ep-link-button" to="/create">
+          {c("create")}
+          <ArrowRight size={17} />
+        </Link>
+      </div>
     </main>
   );
 }

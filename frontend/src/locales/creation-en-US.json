@@ -42,5 +42,11 @@
   "cancelledBody": "The server confirmed cancellation. No result is being generated.",
   "failedBody": "The task did not finish. Check the error details before creating again.",
   "stopped": "This task has stopped",
-  "doneBody": "The server returned a result. Opening the work."
+  "doneBody": "The server returned a result. Opening the work.",
+  "saveDraft": "Save private draft",
+  "draftPrivacy": "Saving stores your text and selected photo privately in your account.",
+  "draftSaved": "Private draft saved.",
+  "untitledDraft": "Untitled creation",
+  "draftLoading": "Restoring private draft…",
+  "draftLoadFailed": "Could not restore this draft. Your current input has not been replaced."
 }

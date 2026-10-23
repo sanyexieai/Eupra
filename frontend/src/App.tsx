@@ -1,4 +1,5 @@
-import { ExportPanel } from "./ExportPanel";
+import { DraftLibrary } from "./DraftLibrary";
+import { ExportPanel, ShareUnavailable } from "./ExportPanel";
 import {
   LineageGraph,
   ContributionCards,
@@ -32,6 +33,7 @@ import {
   Globe,
   Plus,
   Image as ImageIcon,
+  Camera,
   Type,
   Layers,
   Sparkles,
@@ -72,6 +74,8 @@ type Draft = {
   file: File | null;
   preview: string;
   sample: boolean;
+  source_id?: string | null;
+  parent_version_id?: string | null;
 };
 const Context = createContext<any>(null);
 const useApp = () => useContext(Context);
@@ -173,6 +177,8 @@ export default function App() {
       SAFETY_HOLD: "shareHold",
       REMIX_DISABLED: "remixDisabled",
       INVALID_CREDENTIALS: "authFailed",
+      REVISION_CONFLICT: "draftConflict",
+      SHARE_TOKEN_REQUIRED: "retryShared",
     };
     setNotice(t(map[e.code] || "error"));
   };
@@ -193,7 +199,16 @@ export default function App() {
         navigate,
       }}
     >
-      <div className="site">
+      <div
+        className={
+          "site " +
+          (location.pathname === "/create"
+            ? "creation-shell"
+            : location.pathname === "/welcome"
+              ? "welcome-shell"
+              : "")
+        }
+      >
         <Header />
         {offline && (
           <div className="service-banner">
@@ -225,11 +240,13 @@ export default function App() {
           <Route path="/examples/:id" element={<Example />} />
           <Route path="*" element={<Unavailable />} />
         </Routes>
-        <footer>
-          <Logo />
-          <span>{t("copyright")}</span>
-          <Link to="/settings">{t("settings")}</Link>
-        </footer>
+        {!["/create", "/welcome"].includes(location.pathname) && (
+          <footer>
+            <Logo />
+            <span>{t("copyright")}</span>
+            <Link to="/settings">{t("settings")}</Link>
+          </footer>
+        )}
         <MobileNav />
         {notice && (
           <div className="toast" role="status">
@@ -247,14 +264,23 @@ export default function App() {
 }
 function Header() {
   const { t, locale, setLocale, user, setAuth } = useApp();
+  const { pathname } = useLocation();
+  const compact = ["/create", "/welcome"].includes(pathname);
   return (
     <header>
-      <Logo />
-      <nav>
-        <a href="/#possibilities">{t("navExamples")}</a>
-        <a href="/#how">{t("navHow")}</a>
-        <Link to="/works">{t("navWorks")}</Link>
-      </nav>
+      <div className="header-brand">
+        <Logo />
+        {pathname === "/create" && (
+          <span className="header-context">{t("creationHome")}</span>
+        )}
+      </div>
+      {!compact && (
+        <nav>
+          <a href="/#possibilities">{t("navExamples")}</a>
+          <a href="/#how">{t("navHow")}</a>
+          <Link to="/works">{t("navWorks")}</Link>
+        </nav>
+      )}
       <div className="header-actions">
         <button
           className="language"
@@ -277,10 +303,12 @@ function Header() {
             {t("login")}
           </button>
         )}
-        <Link className="btn white small" to="/create">
-          {t("start")}
-          <ArrowUpRight size={15} />
-        </Link>
+        {!compact && (
+          <Link className="btn white small" to="/create">
+            {t("start")}
+            <ArrowUpRight size={15} />
+          </Link>
+        )}
       </div>
     </header>
   );
@@ -288,7 +316,7 @@ function Header() {
 function MobileNav() {
   const { t } = useApp();
   const loc = useLocation();
-  if (loc.pathname === "/") return null;
+  if (!["/create", "/works", "/settings"].includes(loc.pathname)) return null;
   return (
     <div className="mobile-nav">
       <Link to="/create">
@@ -307,7 +335,8 @@ function MobileNav() {
   );
 }
 function Landing() {
-  const { t } = useApp();
+  const { t, locale } = useApp();
+  const video = useRef<HTMLVideoElement>(null);
   return (
     <>
       <main className="landing">
@@ -394,25 +423,140 @@ function Landing() {
           </div>
           <p className="fineprint">{t("exampleNote")}</p>
         </section>
-        <section id="how" className="section how">
-          <h2>{t("howHeading")}</h2>
-          <div className="steps">
-            {[1, 2, 3].map((i) => (
-              <div key={i}>
-                <span className="step-no">0{i}</span>
-                <h3>{t("step" + i)}</h3>
-                <p>{t("step" + i + "body")}</p>
+        <section id="how" className="landing-how">
+          <div className="landing-section-inner">
+            <div className="landing-how-heading">
+              <div>
+                <p className="eyebrow">{t("howKicker")}</p>
+                <h2>{t("howHeading")}</h2>
               </div>
-            ))}
+              <img src={asset("logo.png")} alt="" />
+            </div>
+            <div className="illustrated-steps">
+              {[1, 2, 3].map((i) => (
+                <article key={i}>
+                  <div className="step-mark">
+                    <span>0{i}</span>
+                    <ArrowUpRight size={14} />
+                  </div>
+                  <div className={"step-illustration illustration-" + i}>
+                    <img
+                      src={asset(
+                        [
+                          "demo-source.webp",
+                          "cat-ceo-hero.webp",
+                          "cat-moon-hero.webp",
+                        ][i - 1],
+                      )}
+                      alt=""
+                    />
+                    {i === 3 ? (
+                      <img src={asset("shiba-agent.webp")} alt="" />
+                    ) : (
+                      <span aria-hidden="true">✦</span>
+                    )}
+                  </div>
+                  <h3>{t("step" + i)}</h3>
+                  <p>{t("step" + i + "body")}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
-        <section className="closing">
-          <Sparkles size={25} />
-          <h2>{t("closing")}</h2>
-          <Link to="/create" className="btn primary">
-            {t("happen")}
-            <ArrowRight size={19} />
-          </Link>
+        <section className="landing-relay" aria-labelledby="relay-title">
+          <div className="landing-section-inner relay-layout">
+            <div className="relay-copy">
+              <p className="eyebrow">{t("relayKicker")}</p>
+              <h2 id="relay-title">{t("relayTitle")}</h2>
+              <p>{t("relayBody")}</p>
+              <p className="relay-proof">{t("relayLineage")}</p>
+              <Link className="btn white" to="/examples/moon">
+                {t("relayAction")}
+                <ArrowUpRight size={17} />
+              </Link>
+            </div>
+            <div className="relay-artwork">
+              <Link to="/examples/ceo" className="relay-parent">
+                <img src={asset("cat-ceo-hero.webp")} alt={t("ceo")} />
+                <span>{t("version1")}</span>
+              </Link>
+              <span className="relay-connector" aria-hidden="true">
+                ↝
+              </span>
+              <Link to="/examples/moon" className="relay-child">
+                <img src={asset("cat-moon-hero.webp")} alt={t("moon")} />
+                <span>{t("version2")}</span>
+              </Link>
+              <p className="relay-scenario">❞ {t("relayScenario")}</p>
+            </div>
+          </div>
+          <p className="fineprint">{t("exampleNote")}</p>
+        </section>
+        <section
+          className="landing-video"
+          aria-labelledby="landing-video-title"
+        >
+          <div className="landing-section-inner video-layout">
+            <div className="landing-video-frame">
+              <video
+                ref={video}
+                key={locale}
+                controls
+                playsInline
+                preload="metadata"
+                poster={asset("cat-ceo-hero.webp")}
+                aria-label={t("landingVideoLabel")}
+                src={asset(
+                  locale === "zh-CN"
+                    ? "cn12_cinematic_demo_5s.mp4"
+                    : "cn12_cinematic_demo_5s_en.mp4",
+                )}
+              />
+              <span>{t("example")}</span>
+            </div>
+            <div>
+              <p className="eyebrow">{t("landingVideoKicker")}</p>
+              <h2 id="landing-video-title">{t("landingVideoTitle")}</h2>
+              <p>{t("landingVideoBody")}</p>
+              <p className="video-demo-boundary">{t("landingVideoNote")}</p>
+              <button
+                className="btn primary"
+                onClick={() => {
+                  video.current?.scrollIntoView({
+                    block: "center",
+                    behavior: "smooth",
+                  });
+                  video.current?.play().catch(() => {});
+                }}
+              >
+                {t("landingVideoPlay")}
+                <ArrowUpRight size={18} />
+              </button>
+              <Link className="text-button" to="/balance">
+                {t("credits")}
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </section>
+        <section className="landing-closing">
+          <div className="closing-frame">
+            <p className="eyebrow">{t("closingKicker")}</p>
+            <h2>{t("closing")}</h2>
+            <Link to="/create" className="btn primary">
+              {t("happen")}
+              <ArrowRight size={19} />
+            </Link>
+            <span className="closing-star first" aria-hidden="true">
+              ✦
+            </span>
+            <span className="closing-star second" aria-hidden="true">
+              ✧
+            </span>
+            <span className="closing-star third" aria-hidden="true">
+              ✳
+            </span>
+          </div>
         </section>
       </main>
     </>
@@ -627,6 +771,7 @@ function Workbench({ compact = false }: { compact?: boolean }) {
 }
 function Create() {
   const app = useApp();
+  const [params] = useSearchParams();
   const { t } = app;
   const job = sessionStorage.getItem("eupra.job");
   return (
@@ -636,10 +781,19 @@ function Create() {
           <Sparkles size={16} />
           {t("welcome")}
         </p>
-        <h1>{t("createTitle")}</h1>
+        <h1>
+          {app.locale === "zh-CN" ? (
+            <>
+              现在，想<span className="creation-title-accent">发生</span>
+              点什么？
+            </>
+          ) : (
+            t("createTitle")
+          )}
+        </h1>
         <p>{t("createSubtitle")}</p>
       </div>
-      <CreationWorkbench app={app} />
+      <CreationWorkbench app={app} draftId={params.get("draft") || undefined} />
       {job && (
         <Link className="resume" to={"/jobs/" + job}>
           <Clock size={16} />
@@ -828,9 +982,13 @@ function JobPage() {
   const { t, navigate, error, locale } = useApp();
   const [job, setJob] = useState<Job | null>(null);
   const [failed, setFailed] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   useEffect(() => {
     let active = true;
     let terminal = false;
+    setJob(null);
+    setFailed(false);
     const poll = async () => {
       if (terminal) return;
       try {
@@ -864,7 +1022,7 @@ function JobPage() {
         sourceText={job?.input_summary?.text_excerpt || ""}
       >
         <div className="status-pill">
-          <i />
+          {!job || ["queued", "running"].includes(job.status) ? <i /> : null}
           {job
             ? t(
                 (
@@ -911,15 +1069,49 @@ function JobPage() {
         )}
         {job && ["queued", "running"].includes(job.status) && (
           <Btn
+            disabled={cancelling}
             onClick={async () => {
+              if (cancelling || !window.confirm(t("cancelConfirm"))) return;
+              setCancelling(true);
               try {
                 setJob(await post("/generation-jobs/" + id + "/cancel"));
               } catch (e) {
                 error(e);
+              } finally {
+                setCancelling(false);
               }
             }}
           >
             {t("cancelJob")}
+          </Btn>
+        )}
+        {job && ["failed", "cancelled"].includes(job.status) && (
+          <Btn
+            kind="primary"
+            disabled={retrying}
+            onClick={async () => {
+              if (retrying) return;
+              setRetrying(true);
+              try {
+                const next = await api<Job>(
+                  "/generation-jobs/" + job.id + "/retry",
+                  {
+                    method: "POST",
+                    headers: { "Idempotency-Key": crypto.randomUUID() },
+                    body: JSON.stringify({}),
+                  },
+                );
+                sessionStorage.setItem("eupra.job", next.id);
+                setJob(null);
+                navigate("/jobs/" + next.id);
+              } catch (e) {
+                error(e);
+              } finally {
+                setRetrying(false);
+              }
+            }}
+          >
+            {t("retryOriginal")}
           </Btn>
         )}
         {(failed || (job && ["failed", "cancelled"].includes(job.status))) && (
@@ -985,7 +1177,6 @@ function Result({ details = false }: { details?: boolean }) {
             <Sparkles size={17} />
             {t("welcome")}
           </p>
-          <h2>{v.title}</h2>
           <p className="caption">{v.caption}</p>
           {v.source_id && (
             <>
@@ -1127,15 +1318,36 @@ function PublicShare() {
   const { t, user, setAuth, locale, navigate, error } = useApp();
   const [data, setData] = useState<any>(null);
   const [failed, setFailed] = useState(false);
+  const [errorCode, setErrorCode] = useState<string | undefined>();
+  const [retry, setRetry] = useState(0);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     setData(null);
     setFailed(false);
+    setErrorCode(undefined);
+    let active = true;
     api("/share/" + token)
-      .then(setData)
-      .catch(() => setFailed(true));
-  }, [token]);
-  if (failed) return <Missing />;
+      .then((value) => {
+        if (active) setData(value);
+      })
+      .catch((e) => {
+        if (active) {
+          setFailed(true);
+          setErrorCode(e?.code);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [token, retry]);
+  if (failed)
+    return (
+      <ShareUnavailable
+        locale={locale}
+        errorCode={errorCode}
+        onRetry={() => setRetry((v) => v + 1)}
+      />
+    );
   if (!data) return <Loading />;
   const v = data.version || data;
   return (
@@ -1145,51 +1357,53 @@ function PublicShare() {
         {t("localPreview")}
       </p>
       <VersionVisual t={t} v={v} large />
-      <p className="inline-note">{t("localPreviewNote")}</p>
-      <p className="caption">{v.caption}</p>
-      <Btn
-        kind="primary wide"
-        disabled={busy || !v.remix_allowed}
-        onClick={async () => {
-          if (!user) {
-            setAuth(true);
-            return;
-          }
-          if (busy) return;
-          setBusy(true);
-          try {
-            const j = await api<Job>("/generation-jobs", {
-              method: "POST",
-              headers: { "Idempotency-Key": crypto.randomUUID() },
-              body: JSON.stringify({
-                kind: "continuation",
-                parent_version_id: v.id,
-                share_token: token,
-                locale: locale === "zh-CN" ? "zh-CN" : "en",
-              }),
-            });
-            sessionStorage.setItem("eupra.job", j.id);
-            navigate("/jobs/" + j.id);
-          } catch (e) {
-            error(e);
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        <Sparkles size={19} />
-        {t("push")}
-        <ArrowRight size={20} />
-      </Btn>
-      <p className="fineprint">
-        {t(
-          !v.remix_allowed
-            ? "remixDisabled"
-            : user
-              ? "accurateParent"
-              : "authNeeded",
-        )}
-      </p>
+      <section className="public-participation">
+        <p className="inline-note">{t("localPreviewNote")}</p>
+        <p className="caption">{v.caption}</p>
+        <Btn
+          kind="primary wide"
+          disabled={busy || !v.remix_allowed}
+          onClick={async () => {
+            if (!user) {
+              setAuth(true);
+              return;
+            }
+            if (busy) return;
+            setBusy(true);
+            try {
+              const j = await api<Job>("/generation-jobs", {
+                method: "POST",
+                headers: { "Idempotency-Key": crypto.randomUUID() },
+                body: JSON.stringify({
+                  kind: "continuation",
+                  parent_version_id: v.id,
+                  share_token: token,
+                  locale: locale === "zh-CN" ? "zh-CN" : "en",
+                }),
+              });
+              sessionStorage.setItem("eupra.job", j.id);
+              navigate("/jobs/" + j.id);
+            } catch (e) {
+              error(e);
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <Sparkles size={19} />
+          {t("push")}
+          <ArrowRight size={20} />
+        </Btn>
+        <p className="fineprint">
+          {t(
+            !v.remix_allowed
+              ? "remixDisabled"
+              : user
+                ? "accurateParent"
+                : "authNeeded",
+          )}
+        </p>
+      </section>
     </main>
   );
 }
@@ -1299,12 +1513,63 @@ function Translated({ k }: { k: Key }) {
 }
 
 function Welcome() {
-  const { t, draft, setDraft, navigate } = useApp();
+  const { t, draft, setDraft, navigate, config, setNotice } = useApp();
+  const photo = useRef<HTMLInputElement>(null);
+  const camera = useRef<HTMLInputElement>(null);
+  const choose = (file?: File) => {
+    if (!file) return;
+    const allowed = config?.upload?.mime_types || [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+    if (
+      !allowed.includes(file.type) ||
+      file.size > (config?.upload?.max_bytes || 10485760)
+    ) {
+      setNotice(t("welcomeInvalidPhoto"));
+      return;
+    }
+    if (draft.preview.startsWith("blob:")) URL.revokeObjectURL(draft.preview);
+    setDraft({
+      ...draft,
+      mode: "photo",
+      file,
+      source_id: null,
+      parent_version_id: null,
+      preview: URL.createObjectURL(file),
+      sample: false,
+    });
+    navigate("/create");
+  };
   return (
     <main className="welcome-page">
+      <input
+        ref={photo}
+        hidden
+        type="file"
+        accept={(
+          config?.upload?.mime_types || [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+          ]
+        ).join(",")}
+        aria-label={t("welcomePhotoInput")}
+        onChange={(e) => choose(e.target.files?.[0])}
+      />
+      <input
+        ref={camera}
+        hidden
+        type="file"
+        accept="image/*"
+        capture="environment"
+        aria-label={t("welcomeCameraInput")}
+        onChange={(e) => choose(e.target.files?.[0])}
+      />
       <p className="eyebrow">{t("welcomeKicker")}</p>
-      <img className="welcome-brand-mark" src={asset("logo.png")} alt="" />
       <h1>{t("brand")}</h1>
+      <span className="welcome-wordmark">EUPRA</span>
       <p className="welcome-slogan">{t("welcomeSlogan")}</p>
       <img
         className="welcome-portal"
@@ -1321,12 +1586,20 @@ function Welcome() {
             <button
               key={mode}
               onClick={() => {
+                if (mode === "photo") {
+                  photo.current?.click();
+                  return;
+                }
+                if (mode === "mix") {
+                  camera.current?.click();
+                  return;
+                }
                 setDraft({ ...draft, mode });
                 navigate("/create");
               }}
             >
-              {[<ImageIcon />, <Type />, <Layers />][i]}
-              <span>{t(["quickPhoto", "quickText", "quickMix"][i])}</span>
+              {[<ImageIcon />, <Type />, <Camera />][i]}
+              <span>{t(["quickPhoto", "quickText", "quickCamera"][i])}</span>
             </button>
           ))}
         </div>
@@ -1336,7 +1609,9 @@ function Welcome() {
   );
 }
 function Works() {
-  const { t, user, setAuth, error } = useApp();
+  const app = useApp();
+  const { t, user, setAuth, error } = app;
+  const [refresh, setRefresh] = useState(0);
   const [works, setWorks] = useState<Version[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [query, setQuery] = useState("");
@@ -1347,7 +1622,7 @@ function Works() {
       api("/me/works")
         .then((r) => setWorks(r.items))
         .catch(() => setFailed(true));
-  }, [user]);
+  }, [user, refresh]);
   const all = works || [];
   const roots = all.filter((v) => !v.parent_version_id);
   const filtered = all
@@ -1372,6 +1647,7 @@ function Works() {
   return (
     <main className="page">
       <PageTitle title="yourUniverse" desc="mySubtitle" eyebrow="navWorks" />
+      <DraftLibrary app={app} onWorksChanged={() => setRefresh((v) => v + 1)} />
       {!user ? (
         <div className="empty">
           <FolderHeart />
@@ -1737,11 +2013,22 @@ function World() {
         </>
       ) : (
         <>
-          <PageTitle
-            title="world"
-            desc="chooseMomentBody"
-            eyebrow="growingWorld"
-          />
+          <div className="world-identity">
+            <p className="eyebrow">{t("growingWorld")}</p>
+            <h1>{current.title}</h1>
+            <p>{current.caption}</p>
+            <div className="creator-chip">
+              <img src={asset("logo.png")} alt="" />
+              <div>
+                <small>{t("creator")}</small>
+                <strong>
+                  {current.creator_id === user?.id
+                    ? user?.email || t("creator")
+                    : current.creator_id}
+                </strong>
+              </div>
+            </div>
+          </div>
           <div className="world-overview">
             <VersionVisual t={t} v={current} large />
             <div className="world-context">
@@ -1749,19 +2036,6 @@ function World() {
                 {t("selectedVersion")} · {items.indexOf(current) + 1}/
                 {items.length}
               </span>
-              <h2>{current.title}</h2>
-              <p>{current.caption}</p>
-              <div className="creator-chip">
-                <img src={asset("orb-mark.svg")} alt="" />
-                <div>
-                  <small>{t("creator")}</small>
-                  <strong>
-                    {current.creator_id === user?.id
-                      ? user?.email
-                      : current.creator_id}
-                  </strong>
-                </div>
-              </div>
               <Link className="btn primary wide" to={"/remix/" + current.id}>
                 <Sparkles size={19} />
                 {t("push")}

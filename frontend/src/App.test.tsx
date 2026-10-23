@@ -515,4 +515,102 @@ describe("unified application integration", () => {
     );
     await waitFor(() => expect(target()).toBe("/remix/v1"));
   });
+  it.each(["Choose a welcome photo", "Capture a welcome photo"])(
+    "carries actual welcome input into creation: %s",
+    async (label) => {
+      localStorage.setItem("eupra.locale", "en-US");
+      URL.createObjectURL = vi.fn(() => "blob:welcome-file");
+      mount("/welcome");
+      const file = new File(["image"], "photo.png", { type: "image/png" });
+      fireEvent.change(screen.getByLabelText(label), {
+        target: { files: [file] },
+      });
+      await waitFor(() =>
+        expect(
+          document
+            .querySelector(".dropzone.has-image > img")
+            ?.getAttribute("src"),
+        ).toBe("blob:welcome-file"),
+      );
+      expect(call.mock.calls.some(([path]) => path === "/uploads")).toBe(false);
+    },
+  );
+  it("requires cancellation confirmation and retries exact persisted input through server", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    const running = {
+      id: "j1",
+      status: "running",
+      stage: "PROVIDER_PIPELINE",
+      demo: true,
+      version_id: null,
+      error: null,
+    };
+    call.mockImplementation(async (path) => {
+      if (path === "/config") return cfg;
+      if (path === "/auth/me") return { user: { id: "u1" } };
+      if (path === "/generation-jobs/j1") return running;
+      if (path === "/generation-jobs/j1/retry") return { ...running, id: "j2" };
+      if (path === "/generation-jobs/j2") return { ...running, id: "j2" };
+      throw Error(path);
+    });
+    send.mockResolvedValue({
+      ...running,
+      status: "cancelled",
+      stage: "CANCELLED",
+    });
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    mount("/jobs/j1");
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel task" }));
+    expect(send).not.toHaveBeenCalled();
+    confirm.mockReturnValue(true);
+    fireEvent.click(screen.getByRole("button", { name: "Cancel task" }));
+    const retry = await screen.findByRole("button", {
+      name: "Retry original input",
+    });
+    expect(document.querySelector(".cp-stage-bars")).toBeNull();
+    expect(document.querySelector(".cp-timing")).toBeNull();
+    fireEvent.click(retry);
+    await waitFor(() =>
+      expect(
+        call.mock.calls.some(([path]) => path === "/generation-jobs/j1/retry"),
+      ).toBe(true),
+    );
+    const request = call.mock.calls.find(
+      ([path]) => path === "/generation-jobs/j1/retry",
+    )![1]!;
+    expect(request.body).toBe("{}");
+    expect(request.headers).toHaveProperty("Idempotency-Key");
+    confirm.mockRestore();
+  });
+  it("renders illustrated landing steps and an explicitly labeled local design video", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    mount("/");
+    expect(document.querySelectorAll(".illustrated-steps article").length).toBe(
+      3,
+    );
+    expect(
+      document.querySelector(
+        '.illustration-3 img[src="/assets/shiba-agent.webp"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      screen.getByText("An original is a beginning. Not an ending."),
+    ).toBeTruthy();
+    const video = screen.getByLabelText(
+      "Pre-made five-second design demonstration",
+    );
+    expect(video.getAttribute("src")).toBe(
+      "/assets/cn12_cinematic_demo_5s_en.mp4",
+    );
+    expect(video.hasAttribute("controls")).toBe(true);
+    expect(
+      screen.getByText(
+        "Pre-made design demonstration only. Live video generation is not available.",
+      ),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Interface language" }));
+    expect(
+      screen.getByLabelText("预制5秒设计视频演示").getAttribute("src"),
+    ).toBe("/assets/cn12_cinematic_demo_5s.mp4");
+  });
 });

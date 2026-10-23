@@ -1,3 +1,4 @@
+mod assets;
 #[allow(dead_code)]
 mod engine;
 #[allow(dead_code)]
@@ -74,6 +75,7 @@ fn field<'a>(v: &'a Value, k: &str) -> &'a str {
 fn init(db: Connection, demo: bool) -> App {
     db.execute_batch("PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,hash TEXT NOT NULL,settings TEXT NOT NULL); CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),expires INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS uploads(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),mime TEXT NOT NULL,bytes BLOB NOT NULL); CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),idem TEXT NOT NULL,request TEXT NOT NULL,data TEXT NOT NULL,UNIQUE(user_id,idem)); CREATE TABLE IF NOT EXISTS versions(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),world TEXT NOT NULL,data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS reports(id TEXT PRIMARY KEY,user_id TEXT NOT NULL,version_id TEXT NOT NULL,reason TEXT NOT NULL); CREATE TABLE IF NOT EXISTS video_ledger(job_id TEXT PRIMARY KEY,user_id TEXT NOT NULL,day TEXT NOT NULL); ").expect("database schema");
     sharing::schema(&db);
+    assets::schema(&db);
     db.execute_batch("CREATE TABLE IF NOT EXISTS auth_attempts(email_hash TEXT NOT NULL,at INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS auth_attempt_time ON auth_attempts(at);").expect("auth rate schema");
     let rows: Vec<(String, String)> = db
         .prepare("SELECT id,data FROM jobs")
@@ -128,7 +130,12 @@ fn user(a: &App, h: &HeaderMap) -> R<String> {
         .ok_or_else(|| err(StatusCode::UNAUTHORIZED, "AUTH_REQUIRED", "Please sign in"))
 }
 fn owned(a: &App, table: &str, key: &str, uid: &str) -> R<Value> {
-    let sql = format!("SELECT data FROM {table} WHERE id=? AND user_id=?");
+    let active_clause = if table == "versions" {
+        " AND NOT EXISTS(SELECT 1 FROM work_states WHERE version_id=versions.id AND deleted_at IS NOT NULL)"
+    } else {
+        ""
+    };
+    let sql = format!("SELECT data FROM {table} WHERE id=? AND user_id=?{active_clause}");
     let s: Option<String> =
         a.db.lock()
             .unwrap()
@@ -136,6 +143,9 @@ fn owned(a: &App, table: &str, key: &str, uid: &str) -> R<Value> {
             .optional()?;
     s.map(|s| {
         let mut v: Value = serde_json::from_str(&s).unwrap();
+        if table == "versions" {
+            v["deleted_at"] = Value::Null;
+        }
         if table == "versions" && v.get("favorite").is_none() {
             v["favorite"] = json!(false);
         }
@@ -155,13 +165,33 @@ fn routes(a: App) -> Router {
         .route("/api/v1/generation-jobs", post(create_job))
         .route("/api/v1/generation-jobs/{id}", get(job_get))
         .route("/api/v1/generation-jobs/{id}/cancel", post(cancel))
-        .route("/api/v1/versions/{id}", get(version_get))
+        .route(
+            "/api/v1/versions/{id}",
+            get(version_get).delete(assets::trash_work),
+        )
+        .route("/api/v1/versions/{id}/restore", post(assets::restore_work))
+        .route(
+            "/api/v1/versions/{id}/export-permission",
+            get(assets::export_permission),
+        )
+        .route(
+            "/api/v1/me/drafts",
+            get(assets::list_drafts).post(assets::create_draft),
+        )
+        .route(
+            "/api/v1/drafts/{id}",
+            get(assets::get_draft)
+                .patch(assets::patch_draft)
+                .delete(assets::trash_draft),
+        )
+        .route("/api/v1/drafts/{id}/restore", post(assets::restore_draft))
+        .route("/api/v1/generation-jobs/{id}/retry", post(retry_job))
         .route("/api/v1/versions/{id}/children", get(children))
         .route("/api/v1/versions/{id}/save", post(save))
         .route("/api/v1/versions/{id}/remix-permission", patch(permission))
         .route("/api/v1/versions/{id}/publish", post(publish))
         .route("/api/v1/story-worlds/{id}", get(world))
-        .route("/api/v1/me/works", get(works))
+        .route("/api/v1/me/works", get(assets::works))
         .route("/api/v1/me/settings", get(settings).patch(settings_patch))
         .route("/api/v1/me/video-credits", get(credits))
         .route("/api/v1/share-links", post(sharing::create))
@@ -762,24 +792,7 @@ async fn version_get(
     Ok(Json(owned(&a, "versions", &key, &user(&a, &h)?)?))
 }
 fn list(a: &App, uid: &str) -> R<Vec<Value>> {
-    let db = a.db.lock().unwrap();
-    let mut q = db.prepare("SELECT data FROM versions WHERE user_id=? ORDER BY rowid DESC")?;
-    let data = q
-        .query_map([uid], |r| r.get::<_, String>(0))?
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok(data
-        .into_iter()
-        .map(|s| {
-            let mut v: Value = serde_json::from_str(&s).unwrap();
-            if v.get("favorite").is_none() {
-                v["favorite"] = json!(false);
-            }
-            v
-        })
-        .collect())
-}
-async fn works(State(a): State<App>, h: HeaderMap) -> R<Json<Value>> {
-    Ok(Json(json!({"items":list(&a,&user(&a,&h)?)?})))
+    assets::versions(a, uid, "active")
 }
 async fn children(State(a): State<App>, h: HeaderMap, Path(key): Path<String>) -> R<Json<Value>> {
     let uid = user(&a, &h)?;
@@ -837,7 +850,7 @@ async fn permission(
             "remix_allowed must be boolean",
         )
     })?;
-    a.db.lock().unwrap().execute("UPDATE versions SET data=json_set(data,'$.remix_allowed',json(?)) WHERE id=? AND user_id=?",params![flag.to_string(),key,uid])?;
+    a.db.lock().unwrap().execute("UPDATE versions SET data=json_set(data,'$.remix_allowed',json(?)) WHERE id=? AND user_id=? AND NOT EXISTS(SELECT 1 FROM work_states WHERE version_id=versions.id AND deleted_at IS NOT NULL)",params![flag.to_string(),key,uid])?;
     Ok(Json(owned(&a, "versions", &key, &uid)?))
 }
 async fn settings(State(a): State<App>, h: HeaderMap) -> R<Json<Value>> {
@@ -1282,6 +1295,7 @@ async fn favorite(
     })?;
     let mut db = a.db.lock().unwrap();
     let tx = db.transaction()?;
+    assets::active(&tx, &key)?;
     let raw: Option<String> = tx
         .query_row(
             "SELECT data FROM versions WHERE id=? AND user_id=?",
@@ -1553,4 +1567,70 @@ mod local_regressions {
             request(&app, "GET", "/api/v1/me/story-worlds", &c, Value::Null, "").await;
         assert_eq!(worlds["items"][0]["version_count"], 1);
     }
+}
+async fn retry_job(
+    State(a): State<App>,
+    h: HeaderMap,
+    Path(key): Path<String>,
+    Json(body): Json<Value>,
+) -> R<Json<Value>> {
+    let uid = user(&a, &h)?;
+    if !body.is_object() || body.as_object().unwrap().keys().any(|k| k != "share_token") {
+        return Err(err(
+            StatusCode::BAD_REQUEST,
+            "INVALID_RETRY",
+            "Retry accepts only an optional share_token",
+        ));
+    }
+    let new_key = h
+        .get("Idempotency-Key")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    if new_key.is_empty() {
+        return Err(err(
+            StatusCode::BAD_REQUEST,
+            "IDEMPOTENCY_REQUIRED",
+            "New Idempotency-Key required",
+        ));
+    }
+    let row: Option<(String, String, String)> =
+        a.db.lock()
+            .unwrap()
+            .query_row(
+                "SELECT request,data,idem FROM jobs WHERE id=? AND user_id=?",
+                params![key, uid],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+            )
+            .optional()?;
+    let (raw, data, old_key) =
+        row.ok_or_else(|| err(StatusCode::NOT_FOUND, "NOT_FOUND", "Job not found"))?;
+    if new_key == old_key {
+        return Err(err(
+            StatusCode::CONFLICT,
+            "RETRY_KEY_REUSED",
+            "Use a new idempotency key for retry",
+        ));
+    }
+    let job: Value = serde_json::from_str(&data).unwrap();
+    if job["status"] != "failed" && job["status"] != "cancelled" {
+        return Err(err(
+            StatusCode::CONFLICT,
+            "RETRY_NOT_ALLOWED",
+            "Only failed or cancelled jobs can be retried",
+        ));
+    }
+    let mut v: Value = serde_json::from_str(&raw).unwrap();
+    if !field(&v, "share_token").is_empty() {
+        let token = field(&body, "share_token");
+        if token.is_empty() {
+            return Err(err(
+                StatusCode::CONFLICT,
+                "SHARE_TOKEN_REQUIRED",
+                "Reopen an active preview link before retrying this shared work",
+            ));
+        }
+        v["share_token"] = json!(token);
+    }
+    v.as_object_mut().unwrap().remove("idempotency_key");
+    create_job(State(a), h, Json(v)).await
 }

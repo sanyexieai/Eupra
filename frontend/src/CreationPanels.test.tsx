@@ -26,7 +26,13 @@ const cfg: Config = {
 };
 let notice = vi.fn();
 let navigate = vi.fn();
-function Fixture({ config = cfg }: { config?: Config }) {
+function Fixture({
+  config = cfg,
+  draftId,
+}: {
+  config?: Config;
+  draftId?: string;
+}) {
   const [draft, setDraft] = useState<any>({
     mode: "photo",
     text: "",
@@ -37,6 +43,7 @@ function Fixture({ config = cfg }: { config?: Config }) {
   return (
     <>
       <CreationWorkbench
+        draftId={draftId}
         app={{
           locale: "en-US",
           t: (key: keyof typeof en) => en[key],
@@ -155,5 +162,61 @@ describe("creation design integration", () => {
     expect(container.querySelectorAll(".cp-stage-bars .on")).toHaveLength(3);
     expect(screen.getByText(copy.review)).toBeTruthy();
     vi.useRealTimers();
+  });
+  it("restores full private draft text/source and submits without reuploading", async () => {
+    vi.mocked(api).mockImplementation(async (path, options) => {
+      if (path === "/drafts/d1")
+        return {
+          id: "d1",
+          revision: 3,
+          text: "Full original thought",
+          source_id: "source1",
+          source_url: "/api/v1/uploads/source1",
+          parent_version_id: null,
+        };
+      if (path === "/generation-jobs") return { id: "j1" };
+      throw Error(path);
+    });
+    render(<Fixture draftId="d1" />);
+    await waitFor(() =>
+      expect(
+        document.querySelector(".cp-source-preview")?.getAttribute("src"),
+      ).toBe("/api/v1/uploads/source1"),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Let it happen" }));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/jobs/j1"));
+    expect(vi.mocked(api).mock.calls.some(([p]) => p === "/uploads")).toBe(
+      false,
+    );
+    const body = JSON.parse(
+      vi.mocked(api).mock.calls.find(([p]) => p === "/generation-jobs")![1]!
+        .body as string,
+    );
+    expect(body.source_id).toBe("source1");
+    expect(body.text).toBe("Full original thought");
+  });
+  it("explicitly saves a resumed draft with revision checking", async () => {
+    vi.mocked(api).mockImplementation(async (path, options) => {
+      if (path === "/drafts/d1" && !options)
+        return {
+          id: "d1",
+          revision: 3,
+          text: "Saved thought",
+          source_id: null,
+        };
+      if (path === "/drafts/d1" && options?.method === "PATCH")
+        return { id: "d1", revision: 4 };
+      throw Error(path);
+    });
+    render(<Fixture draftId="d1" />);
+    await screen.findByDisplayValue("Saved thought");
+    fireEvent.click(screen.getByRole("button", { name: "Save private draft" }));
+    await waitFor(() =>
+      expect(notice).toHaveBeenCalledWith("Private draft saved."),
+    );
+    const request = vi
+      .mocked(api)
+      .mock.calls.find(([, o]) => o?.method === "PATCH")![1]!;
+    expect(JSON.parse(request.body as string).expected_revision).toBe(3);
   });
 });

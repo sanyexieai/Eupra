@@ -10,7 +10,7 @@ Base `/api/v1`. JSON requests/responses. Cookie session `eupra_session`, HttpOnl
 - GET `/versions/{id}` → version `{id,root_version_id,parent_version_id,story_world_id,creator_id,title,caption,image_url,source_id,kind,depth,remix_allowed,safety_state:"HOLD",demo,created_at,story_memory:{...}}`; owner only until reviewed share enabled. Demo image_url null (frontend presents labeled illustrative design, never claims image generation).
 - GET `/versions/{id}/children` → `{items:[version]}`; GET `/story-worlds/{id}` → `{id,items:[version]}` (owner only).
 - POST `/versions/{id}/save` → `{ok:true,version_id}`; PATCH `/versions/{id}/remix-permission` `{remix_allowed:bool}` → version.
-- GET `/me/works` → `{items:[version]}` including all successful drafts; GET `/me/settings` → `{locale:"zh-CN",market:"CN",default_remix_allowed:true}`; PATCH same with locale/default_remix_allowed → settings.
+- GET `/me/works` → `{items:[version]}` including active owned completed versions; editable creation drafts use /me/drafts; GET `/me/settings` → `{locale:"zh-CN",market:"CN",default_remix_allowed:true}`; PATCH same with locale/default_remix_allowed → settings.
 - POST `/share-links` `{version_id}` → 409 `SAFETY_HOLD` until actual output review integration. GET `/share/{token}` permission-filtered, never source data. POST `/versions/{id}/publish` blocked (`FEATURE_DISABLED` for CN).
 - GET `/me/video-credits` → `{daily_limit:2,successful_today:0,remaining:2,enabled:false}`.
 - POST `/reports` `{version_id,reason}` → `{id,status:"received"}`; access to reported version required.
@@ -54,3 +54,22 @@ Stages actually reached (not elapsed-time estimates):
 - Terminal interruptions: CANCELLED, FAILED; restarted old queued/running jobs use interrupted with failed status.
 
 Frontend should map stages to localized descriptions and use indeterminate progress, not countdowns or invented percentages. A failed stage creates no output version. Cancellation preserves cancelled status even if a provider returns afterward.
+
+## Private creation drafts
+GET /me/drafts?state=active|trash|all returns {items:[draft]}, default active.
+POST /me/drafts {title?,text?,source_id?,parent_version_id?,locale?} returns a direct draft DTO. Defaults: empty title/text, null references, zh-CN. Title <=120 characters; text <=2000; sources and parents must be owned, parent must not be trashed. Empty drafts are permitted. Maximum 200 active drafts per user.
+Draft DTO: {id,title,text,source_id,source_url,locale,parent_version_id,revision,created_at,updated_at,deleted_at}. Text is full original input; source_url is owner-only private upload. No capability tokens are stored in drafts. Shared-parent drafts are not supported; use the authorized shared continuation flow instead.
+GET /drafts/{id} returns an active owned draft, otherwise 404.
+PATCH /drafts/{id} accepts changed draft fields plus mandatory expected_revision. Returns updated draft; stale revision ->409 REVISION_CONFLICT; omitted revision ->400 REVISION_REQUIRED. Immutable id/owner/timestamps cannot be supplied.
+DELETE /drafts/{id} ->{ok:true,id}, recoverable trash only. POST /drafts/{id}/restore ->full draft. Delete/restore increment revision when state changes. Restoring content does not grant permission to a now-deleted parent; generation still revalidates it.
+
+## Recoverable saved-work trash
+GET /me/works?state=active|trash|all defaults active; every returned owned version includes deleted_at:null|epoch_seconds.
+DELETE /versions/{id} ->{ok:true,id,deleted_at}. It hides only the owner's asset, preserves all immutable version content, lineage, contributions, descendants and source uploads, and revokes that version's preview links/local approval. Idempotent repeated deletion remains safe.
+POST /versions/{id}/restore ->full version with deleted_at:null. Old links remain revoked and local review remains withdrawn. Deleted versions are 404 for normal detail/save/favorite/review/remix/export operations. Children already created remain owned by their creators and available independently. Pending generation rechecks parent deletion before committing any child.
+No purge/permanent-delete endpoint exists.
+GET /versions/{id}/export-permission ->{allowed:false,reason:"REVIEW_NOT_CONFIGURED",safety_state:"HOLD",scope:"none"}. Owner active work only; deleted/unknown/non-owner404. This is an unavailable independent review integration, not a promise that review is pending. Local preview/provider review flags do not authorize downloading generated output.
+
+## Source-preserving retry
+POST /generation-jobs/{id}/retry with a NEW Idempotency-Key and JSON {} returns a normal new job using the exact private persisted request. Only original owner and failed/cancelled jobs; source, parent, deletion and permission checks run again. Successful/running jobs ->409 RETRY_NOT_ALLOWED; original key ->409 RETRY_KEY_REUSED. Duplicate retry key replays the same new job.
+For a shared-parent request, body {share_token} must supply a currently valid capability because raw tokens are not persisted. Missing capability ->409 SHARE_TOKEN_REQUIRED; expired/revoked/mismatched capability ->404. Retrying never reconstructs full input from text_excerpt or transfers source ownership.

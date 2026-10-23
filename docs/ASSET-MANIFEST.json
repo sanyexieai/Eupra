@@ -120,6 +120,14 @@
       "exact_original_match": true,
       "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-01/Eupra_CN01_V0.2_Delivery/assets/portal-world.svg",
       "duplicate_reference_count": 2
+    },
+    {
+      "file": "frontend/public/assets/shiba-agent.webp",
+      "bytes": 52928,
+      "sha256": "1f6b12f08a708404c53dc1fd1ec39b57073c943037a456a8dcc0023ce5250ab6",
+      "exact_original_match": true,
+      "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-11/CN-11/assets/shiba-agent.webp",
+      "duplicate_reference_count": 9
     }
   ]
 }

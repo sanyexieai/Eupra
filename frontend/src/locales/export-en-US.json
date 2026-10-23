@@ -10,7 +10,7 @@
   "noImage": "This is a text-only version",
   "save": "Save poster",
   "exportOff": "Personal work export is not available",
-  "exportBody": "This poster is a preview only. There is no personal-export permission API, including for reviewed local text demos. Downloads remain disabled and safety review is not bypassed.",
+  "exportBody": "This is a readable poster-layout preview. Personal works require independent approval and an enabled export service before download. Approving a local text preview does not grant export permission.",
   "shareTo": "Share options",
   "system": "Open system sharing",
   "manual": "Clipboard is unavailable. Select the link below and copy it manually.",
@@ -26,5 +26,15 @@
   "videoBody": "Explore 5-second motion ideas and service status",
   "back": "Back to work",
   "continue": "Sharing is not the ending. The story can keep growing.",
-  "link": "Preview link"
+  "link": "Preview link",
+  "permissionLoading": "Checking export permission…",
+  "permissionUnavailable": "Export permission could not be verified. Export stays disabled.",
+  "permissionHold": "Independent export review is not configured. Export stays disabled.",
+  "permissionNoDelivery": "Personal poster downloads are not available. Export stays disabled.",
+  "shareUnavailableTitle": "This preview link is unavailable",
+  "shareUnavailableBody": "It may have expired, been revoked, or not exist. The exact reason is not disclosed to protect work privacy.",
+  "shareDisabledTitle": "Preview links are unavailable here",
+  "shareDisabledBody": "This service has not enabled this kind of preview. The original work remains private.",
+  "retry": "Try loading again",
+  "create": "Start your own creation"
 }

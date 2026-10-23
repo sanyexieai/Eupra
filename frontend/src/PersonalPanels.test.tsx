@@ -112,6 +112,15 @@ describe("personal panels", () => {
     const progress = await screen.findByRole("progressbar");
     expect(progress.getAttribute("value")).toBe("1");
     expect(progress.getAttribute("max")).toBe("2");
+    expect(
+      document.querySelectorAll(".pp-credit-segments > span"),
+    ).toHaveLength(2);
+    expect(
+      document.querySelectorAll(".pp-credit-segments > .available"),
+    ).toHaveLength(1);
+    expect(
+      document.querySelectorAll(".pp-credit-segments > .used"),
+    ).toHaveLength(1);
     expect(screen.getByText(en.statusOff)).toBeTruthy();
     fireEvent.click(screen.getByText(en.policy));
     expect(screen.getByRole("dialog")).toBeTruthy();
@@ -154,5 +163,60 @@ describe("personal panels", () => {
     ).toBe(true);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});
+
+describe("video credit context", () => {
+  it("keeps the source version when opening credits and returns to that video", async () => {
+    const a = makeApp();
+    const { unmount } = render(
+      <MemoryRouter>
+        <VideoStudio app={a} version={version} />
+      </MemoryRouter>,
+    );
+    expect(
+      screen.getByRole("link", { name: en.credits }).getAttribute("href"),
+    ).toBe("/balance?version=v1");
+    unmount();
+    call.mockImplementation(async (path) =>
+      path === "/versions/v1"
+        ? version
+        : { remaining: 1, daily_limit: 2, successful_today: 1, enabled: false },
+    );
+    render(
+      <MemoryRouter initialEntries={["/balance?version=v1"]}>
+        <VideoBalance app={a} />
+      </MemoryRouter>,
+    );
+    await screen.findByText(version.title);
+    expect(
+      screen.getByRole("link", { name: en.back }).getAttribute("href"),
+    ).toBe("/video/v1");
+    expect(
+      screen
+        .getByRole("link", { name: new RegExp(version.title) })
+        .getAttribute("href"),
+    ).toBe("/video/v1");
+  });
+  it("does not display a stale or unauthorized work when the return lookup fails", async () => {
+    call.mockImplementation(async (path) => {
+      if (path.startsWith("/versions/")) throw Error("not found");
+      return {
+        remaining: 1,
+        daily_limit: 2,
+        successful_today: 1,
+        enabled: false,
+      };
+    });
+    render(
+      <MemoryRouter initialEntries={["/balance?version=private"]}>
+        <VideoBalance app={makeApp()} />
+      </MemoryRouter>,
+    );
+    await screen.findByRole("alert");
+    expect(screen.queryByText(version.title)).toBeNull();
+    expect(
+      screen.getByRole("link", { name: en.back }).getAttribute("href"),
+    ).toBe("/settings");
   });
 });

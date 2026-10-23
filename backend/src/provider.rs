@@ -219,6 +219,7 @@ async fn process(a: &App, key: &str, uid: &str, v: &Value) -> Result<(), String>
         return Ok(());
     }
     if !parent.is_empty() {
+        assets::active(&tx, parent).map_err(|_| "PARENT_UNAVAILABLE")?;
         let permitted:bool=tx.query_row("SELECT json_extract(data,'$.remix_allowed') FROM versions WHERE id=? AND user_id=?",params![parent,uid],|r|r.get(0)).map_err(|_|"PARENT_UNAVAILABLE")?;
         if !permitted {
             return Err("REMIX_DISABLED".into());

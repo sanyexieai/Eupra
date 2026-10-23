@@ -80,6 +80,9 @@ export function LineageGraph({
         <h3>{t("graphTitle")}</h3>
       </div>
       <p>{t("graphNote")}</p>
+      <p className="lineage-scroll-hint">
+        <span aria-hidden="true">↔</span> {t("scrollGraph")}
+      </p>
       <div
         className="lineage-scroll"
         tabIndex={0}

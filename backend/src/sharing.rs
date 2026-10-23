@@ -43,6 +43,7 @@ pub async fn review(
     })?;
     let mut db = a.db.lock().unwrap();
     let tx = db.transaction()?;
+    assets::active(&tx, &key)?;
     let raw: Option<String> = tx
         .query_row(
             "SELECT data FROM versions WHERE id=? AND user_id=?",
@@ -130,6 +131,7 @@ pub async fn create(State(a): State<App>, h: HeaderMap, Json(v): Json<Value>) ->
     }
     let mut db = a.db.lock().unwrap();
     let tx = db.transaction()?;
+    assets::active(&tx, key)?;
     let raw: String = tx.query_row(
         "SELECT data FROM versions WHERE id=? AND user_id=?",
         params![key, uid],
@@ -188,7 +190,7 @@ fn capability(db: &Connection, token: &str) -> R<(Value, i64)> {
             "Preview unavailable",
         ));
     }
-    let row:Option<(String,i64)>=db.query_row("SELECT v.data,s.expires_at FROM share_links s JOIN versions v ON v.id=s.version_id WHERE s.token_hash=? AND s.revoked=0 AND s.expires_at>?",params![hash(token),now()],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
+    let row:Option<(String,i64)>=db.query_row("SELECT v.data,s.expires_at FROM share_links s JOIN versions v ON v.id=s.version_id WHERE s.token_hash=? AND s.revoked=0 AND s.expires_at>? AND NOT EXISTS(SELECT 1 FROM work_states WHERE version_id=v.id AND deleted_at IS NOT NULL)",params![hash(token),now()],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
     let (raw, expiry) =
         row.ok_or_else(|| err(StatusCode::NOT_FOUND, "NOT_FOUND", "Preview unavailable"))?;
     let v: Value = serde_json::from_str(&raw).unwrap();
@@ -202,6 +204,7 @@ fn capability(db: &Connection, token: &str) -> R<(Value, i64)> {
     Ok((v, expiry))
 }
 pub fn parent(db: &Connection, key: &str, uid: &str, token: &str, local: bool) -> R<Value> {
+    assets::active(db, key)?;
     let raw: Option<String> = db
         .query_row(
             "SELECT data FROM versions WHERE id=? AND user_id=?",

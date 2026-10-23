@@ -7,12 +7,12 @@ import {
   cleanup,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { ExportPanel } from "./ExportPanel";
-import { post, type Version, type Config } from "./api";
+import { ExportPanel, ShareUnavailable } from "./ExportPanel";
+import { api, post, type Version, type Config } from "./api";
 import en from "./locales/en-US.json";
 import copy from "./locales/export-en-US.json";
 import zh from "./locales/export-zh-CN.json";
-vi.mock("./api", () => ({ post: vi.fn() }));
+vi.mock("./api", () => ({ post: vi.fn(), api: vi.fn() }));
 const version: Version = {
   id: "v1",
   root_version_id: "v1",
@@ -66,6 +66,10 @@ async function create() {
 }
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(api).mockResolvedValue({
+    allowed: false,
+    reason: "REVIEW_NOT_CONFIGURED",
+  });
   vi.mocked(post).mockImplementation(async (path) =>
     path === "/share-links"
       ? { id: "link1", token: "verified-token", expires_at: 1800000000 }
@@ -164,5 +168,43 @@ describe("poster preview and share boundaries", () => {
         .disabled,
     ).toBe(true);
     expect(post).not.toHaveBeenCalled();
+  });
+});
+
+describe("share and export permission states", () => {
+  it("shows the privacy-preserving combined token state", () => {
+    render(
+      <MemoryRouter>
+        <ShareUnavailable locale="en-US" errorCode="NOT_FOUND" />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(copy.shareUnavailableBody)).toBeTruthy();
+    expect(screen.queryByText(copy.shareDisabledTitle)).toBeNull();
+  });
+  it("distinguishes disabled share service without exposing a token", () => {
+    render(
+      <MemoryRouter>
+        <ShareUnavailable locale="en-US" errorCode="SAFETY_HOLD" />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(copy.shareDisabledBody)).toBeTruthy();
+  });
+  it("keeps export disabled even if a future server says allowed without a download contract", async () => {
+    vi.mocked(api).mockResolvedValue({ allowed: true });
+    mount();
+    await screen.findByText(copy.permissionNoDelivery);
+    expect(
+      (screen.getByRole("button", { name: copy.save }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+  it("keeps export disabled when permission lookup fails", async () => {
+    vi.mocked(api).mockRejectedValue(Error("offline"));
+    mount();
+    await screen.findByText(copy.permissionUnavailable);
+    expect(
+      (screen.getByRole("button", { name: copy.save }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
   });
 });

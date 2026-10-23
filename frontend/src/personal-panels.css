@@ -1167,3 +1167,77 @@
     margin-left: 0;
   }
 }
+
+.pp-continue-orb img {
+  max-height: 120px;
+  object-fit: cover;
+  border-radius: 13px;
+}
+/* CN11/CN13 original mobile-art proportions: three distinct overlapping frames. */
+@media (max-width: 650px) {
+  .pp-life-copy h2 {
+    font-size: 32px;
+  }
+  .pp-life-copy h2:lang(zh-CN) {
+    white-space: nowrap;
+  }
+  .pp-collage {
+    width: 180px;
+    right: -5px;
+    top: 0;
+  }
+  .pp-collage img:nth-child(1) {
+    left: 55px;
+    top: 35px;
+    width: 92px;
+    height: 120px;
+  }
+  .pp-collage img:nth-child(2) {
+    right: -10px;
+    top: 110px;
+    width: 103px;
+    height: 120px;
+  }
+  .pp-collage img:nth-child(3) {
+    left: 5px;
+    bottom: 17px;
+    width: 97px;
+    height: 116px;
+  }
+  .pp-credit-ring {
+    width: 180px;
+    height: 180px;
+    padding: 10px;
+  }
+  .pp-credit-ring strong {
+    font-size: 58px;
+  }
+  .pp-credit-ring span {
+    font-size: 12px;
+  }
+}
+.pp-credit-segments {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0 17px;
+}
+.pp-credit-segments > span {
+  height: 7px;
+  border-radius: 5px;
+  background: #30364b;
+}
+.pp-credit-segments > span.available {
+  background: linear-gradient(90deg, #60c9ff, #9574ff, #e78bd0);
+  box-shadow: 0 0 15px #926bda24;
+}
+.pp-balance-card .pp-credit-progress-accessible {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

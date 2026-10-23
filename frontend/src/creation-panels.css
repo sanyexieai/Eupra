@@ -886,3 +886,23 @@
   padding-top: 0;
   background: transparent;
 }
+.cp-draft-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  flex-wrap: wrap;
+}
+.cp-draft-actions .btn {
+  background: #fff;
+  color: #7563b7;
+  border: 1px solid #ddd4f7;
+  font-size: 12px;
+  min-height: 38px;
+}
+.cp-draft-actions small {
+  color: #91869e;
+  font-size: 10px;
+  max-width: 340px;
+  line-height: 1.5;
+}

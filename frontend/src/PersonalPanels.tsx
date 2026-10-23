@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
@@ -475,7 +475,10 @@ export function VideoStudio({
           <ArrowLeft />
         </Link>
         <strong>{t("video")}</strong>
-        <Link className="pp-credit-pill" to="/balance">
+        <Link
+          className="pp-credit-pill"
+          to={"/balance?version=" + encodeURIComponent(version.id)}
+        >
           {t("credits")}
           <ChevronRight size={16} />
         </Link>
@@ -582,12 +585,35 @@ export function VideoStudio({
 }
 export function VideoBalance({ app }: { app: AppContext }) {
   const t = useText(app);
+  const [params] = useSearchParams();
+  const sourceId = params.get("version");
+  const [source, setSource] = useState<Version | null>(null);
+  const [sourceFailed, setSourceFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setSource(null);
+    setSourceFailed(false);
+    if (sourceId && app.user)
+      api<Version>("/versions/" + encodeURIComponent(sourceId))
+        .then((value) => {
+          if (active) setSource(value);
+        })
+        .catch(() => {
+          if (active) setSourceFailed(true);
+        });
+    return () => {
+      active = false;
+    };
+  }, [sourceId, app.user?.id]);
+  const returnPath = source
+    ? "/video/" + encodeURIComponent(source.id)
+    : "/settings";
   const { data, failed, retry } = useCredits(app.user);
   const [sheet, setSheet] = useState<"policy" | "membership" | null>(null);
   return (
     <main className="pp-balance pp-dark">
       <div className="pp-topline">
-        <Link className="pp-icon" to="/settings" aria-label={t("back")}>
+        <Link className="pp-icon" to={returnPath} aria-label={t("back")}>
           <ArrowLeft />
         </Link>
         <strong>{t("credits")}</strong>
@@ -632,7 +658,30 @@ export function VideoBalance({ app }: { app: AppContext }) {
             <span className="pp-status">{t("statusOff")}</span>
           </div>
           <p>{t("creditBody")}</p>
+          <div
+            className="pp-credit-segments"
+            aria-hidden="true"
+            style={{
+              gridTemplateColumns: `repeat(${Math.max(1, Math.min(100, Math.floor(data.daily_limit)))}, minmax(0, 1fr))`,
+            }}
+          >
+            {Array.from(
+              {
+                length: Math.max(
+                  0,
+                  Math.min(100, Math.floor(data.daily_limit)),
+                ),
+              },
+              (_, index) => (
+                <span
+                  key={index}
+                  className={index < data.remaining ? "available" : "used"}
+                />
+              ),
+            )}
+          </div>
           <progress
+            className="pp-credit-progress-accessible"
             aria-label={t("remaining")}
             max={Math.max(1, data.daily_limit)}
             value={data.remaining}
@@ -652,16 +701,24 @@ export function VideoBalance({ app }: { app: AppContext }) {
           </button>
         </section>
       )}
-      <Link className="pp-continue-card" to="/works">
+      {sourceFailed && (
+        <p className="pp-muted" role="alert">
+          {t("loadError")}
+        </p>
+      )}
+      <Link
+        className="pp-continue-card"
+        to={source ? "/video/" + encodeURIComponent(source.id) : "/works"}
+      >
         <div className="pp-continue-orb">
-          <img src="/assets/orb-mark.svg" alt="" />
+          <img src={source?.image_url || "/assets/orb-mark.svg"} alt="" />
         </div>
         <div>
           <small>{t("private")}</small>
-          <h2>{t("chooseWork")}</h2>
+          <h2>{source?.title || t("chooseWork")}</h2>
           <p>{t("unavailable")}</p>
           <span className="pp-gradient-button">
-            {t("allWorks")}
+            {t(source ? "video" : "allWorks")}
             <ArrowRight size={18} />
           </span>
         </div>

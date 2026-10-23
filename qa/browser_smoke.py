@@ -42,8 +42,20 @@ try:
    page.get_by_role('button',name='界面语言').click()
    page.get_by_role('heading',name='Live the impossible.').wait_for()
    passed('language switches landing to English')
+   player=page.get_by_label('Pre-made five-second design demonstration',exact=True)
+   expect(player).to_have_attribute('src','/assets/cn12_cinematic_demo_5s_en.mp4')
+   page.get_by_role('button',name='Play design video',exact=True).click()
+   page.wait_for_function("el => el.currentTime > 0.1",arg=player.element_handle())
+   player.evaluate('el=>el.pause()')
+   passed('WEB-01 original design video actually plays with explicit pre-made labeling')
    page.goto(BASE+'/welcome'); page.wait_for_selector('.welcome-portal')
    assert page.locator('.hero').count()==0
+   for input_label in ['Choose a welcome photo','Capture a welcome photo']:
+    page.get_by_label(input_label,exact=True).set_input_files(str(ROOT/'frontend/public/assets/demo-source.webp'))
+    page.wait_for_url('**/create')
+    page.wait_for_function("document.querySelector('.dropzone.has-image > img')?.getAttribute('src')?.startsWith('blob:')")
+    page.goto(BASE+'/welcome'); page.wait_for_selector('.welcome-portal')
+   passed('CN-01 actual upload and camera-file intents preserve source into creation')
    page.get_by_role('button',name='Write a thought').click()
    page.wait_for_url('**/create')
    field=page.get_by_role('textbox',name='Text',exact=True)
@@ -64,6 +76,16 @@ try:
    page.wait_for_function("!document.querySelector('[role=dialog]')")
    assert field.input_value()=='Another meeting that could have been an email.'
    passed('real registration preserves creation draft')
+   page.get_by_role('button',name='Save private draft',exact=True).click()
+   page.get_by_text('Private draft saved.',exact=True).wait_for()
+   drafts=page.request.get(BASE+'/api/v1/me/drafts').json()['items']
+   assert len(drafts)==1 and drafts[0]['text']=='Another meeting that could have been an email.'
+   saved_draft_id=drafts[0]['id']
+   page.goto(BASE+'/create?draft='+saved_draft_id)
+   expect(page.get_by_role('textbox',name='Text',exact=True)).to_have_value('Another meeting that could have been an email.')
+   page.reload()
+   expect(page.get_by_role('textbox',name='Text',exact=True)).to_have_value('Another meeting that could have been an email.')
+   passed('private draft saves through real API and restores exact text after reload')
    root_id=None; child_id=None; world_id=None; token=None; cancelled_job=None
    if MODE=='demo':
     page.get_by_role('button',name='Let it happen',exact=True).click()
@@ -195,19 +217,19 @@ try:
    passed('all three original input samples select actual source assets')
    page.locator('.cp-samples').scroll_into_view_if_needed()
    page.screenshot(path=str(ART/('CN-02-mobile-samples-viewport-'+MODE+'.png')),full_page=False)
-   # Sample selection shows a dismissible confirmation toast above the footer.
-   # Exercise its visible close control before testing the underlying footer target.
+   # Sample selection shows a dismissible confirmation toast above app navigation.
+   # Exercise its visible close control before testing the underlying account-navigation target.
    sample_notice=page.locator('.toast[role=status]')
    expect(sample_notice).to_be_visible()
    sample_notice.get_by_role('button',name='Close',exact=True).click()
    expect(sample_notice).to_have_count(0)
-   passed('sample confirmation notice can be dismissed before accessing footer controls')
-   footer_link=page.locator('footer').get_by_role('link',name='Account & settings',exact=True)
+   passed('sample confirmation notice can be dismissed before accessing account navigation')
+   footer_link=page.locator('.mobile-nav').get_by_role('link',name='Account & settings',exact=True)
    footer_link.evaluate("el=>el.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'})")
    page.evaluate("()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))")
-   assert footer_link.evaluate("el=>{const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!hit&&(el===hit||el.contains(hit))}"),'Footer control covered by overlay'
+   assert footer_link.evaluate("el=>{const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!hit&&(el===hit||el.contains(hit))}"),'Account navigation covered by overlay'
    footer_link.click(); page.wait_for_url('**/settings')
-   passed('scrolled sample buttons and final footer control are hit-test accessible')
+   passed('scrolled sample buttons and account navigation are hit-test accessible')
    page.goto(BASE+'/create'); page.get_by_role('button',name='Photo',exact=True).click()
    page.get_by_label('Capture or choose a camera photo').set_input_files(str(ROOT/'frontend/public/assets/demo-source.webp'))
    page.wait_for_function("document.querySelector('.dropzone.has-image > img')?.getAttribute('src')?.startsWith('blob:')")
@@ -219,6 +241,60 @@ try:
    page.get_by_role('button',name='Interface language').click()
    assert page.locator('.dropzone.has-image > img').get_attribute('src')==source
    passed('local photo preview survives language change')
+   page.get_by_role('button',name='界面语言',exact=True).click()
+   page.goto(BASE+'/works')
+   library=page.locator('.dl-library')
+   library.locator('.dl-heading').click()
+   expect(library.locator('.dl-item')).to_have_count(1)
+   library.get_by_role('button',name='Move to trash',exact=True).click()
+   library.get_by_role('button',name='Confirm move',exact=True).click()
+   library.get_by_text('No saved drafts yet',exact=True).wait_for()
+   library.get_by_role('button',name='Trash',exact=True).click()
+   expect(library.locator('.dl-item')).to_have_count(1)
+   library.get_by_role('button',name='Restore',exact=True).click()
+   library.get_by_text('Trash is empty',exact=True).wait_for()
+   library.get_by_role('button',name='My drafts',exact=True).click()
+   library.get_by_role('link',name='Continue editing',exact=True).click()
+   expect(page).to_have_url(BASE+'/create?draft='+saved_draft_id)
+   expect(page.get_by_role('textbox',name='Text',exact=True)).to_have_value('Another meeting that could have been an email.')
+   passed('private draft trash and restore use real persisted state and resume original text')
+   page.goto(BASE+'/create'); page.get_by_role('button',name='Photo',exact=True).click()
+   page.get_by_label('Choose a photo').set_input_files(str(ROOT/'frontend/public/assets/demo-source.webp'))
+   page.get_by_role('button',name='Save private draft',exact=True).click()
+   page.get_by_text('Private draft saved.',exact=True).wait_for()
+   photo_drafts=page.request.get(BASE+'/api/v1/me/drafts').json()['items']
+   photo_draft=next(d for d in photo_drafts if d.get('source_id'))
+   page.goto(BASE+'/create?draft='+photo_draft['id'])
+   expect(page.locator('.dropzone.has-image > img')).to_have_attribute('src',photo_draft['source_url'])
+   assert page.request.get(BASE+photo_draft['source_url']).ok
+   stranger=browser.new_context()
+   assert stranger.request.get(BASE+photo_draft['source_url']).status in (401,404)
+   stranger.close()
+   passed('photo draft reload uses actual private stored source and denies anonymous access')
+   if root_id:
+    page.goto(BASE+'/works'); library=page.locator('.dl-library'); library.locator('.dl-heading').click()
+    library.get_by_role('button',name='Manage works',exact=True).click()
+    work=library.locator('.dl-item').filter(has=page.locator('a[href="/versions/'+root_id+'"]'))
+    work.get_by_role('button',name='Move to trash',exact=True).click()
+    work.get_by_role('button',name='Confirm move',exact=True).click()
+    expect(work).to_have_count(0)
+    assert page.request.get(BASE+'/api/v1/share/'+token).status==404
+    assert page.request.get(BASE+'/api/v1/versions/'+child_id).ok
+    library.get_by_role('button',name='Trash',exact=True).click()
+    library.get_by_role('button',name='Restore',exact=True).click()
+    library.get_by_text('Trash is empty',exact=True).wait_for()
+    assert page.request.get(BASE+'/api/v1/versions/'+root_id).ok
+    assert page.request.get(BASE+'/api/v1/share/'+token).status==404
+    permission=page.request.get(BASE+'/api/v1/versions/'+root_id+'/export-permission').json()
+    assert permission['allowed'] is False and permission['reason']=='REVIEW_NOT_CONFIGURED'
+    page.goto(BASE+'/s/'+token); page.locator('.ep-unavailable').wait_for()
+    passed('recoverable work deletion preserves child, revokes preview permanently, and keeps export held')
+    if cancelled_job:
+     page.goto(BASE+'/jobs/'+cancelled_job)
+     page.get_by_role('button',name='Retry original input',exact=True).click()
+     page.wait_for_url('**/result/**',timeout=20000)
+     assert page.url.rsplit('/',1)[1] not in (root_id,child_id)
+     passed('terminal job retry uses full server-retained source input and creates a new job')
    assert not errors,errors; passed('no browser JavaScript runtime errors')
   except Exception as exc:
    # Only URL path and sanitized exception type are retained; never cookies/password fields.

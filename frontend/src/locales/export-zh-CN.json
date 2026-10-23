@@ -10,7 +10,7 @@
   "noImage": "此版本为文字作品",
   "save": "保存海报",
   "exportOff": "个人作品导出尚未开放",
-  "exportBody": "海报仅用于预览。当前没有个人作品导出权限接口，包括已确认的本地文字演示；不会下载或绕过安全审核。",
+  "exportBody": "这是可完整阅读的海报排版预览。个人作品只有在独立审核通过且服务提供导出能力时才可下载；本地文字预览确认不授予导出权限。",
   "shareTo": "分享方式",
   "system": "打开系统分享",
   "manual": "剪贴板不可用，请选中下方链接手动复制。",
@@ -26,5 +26,15 @@
   "videoBody": "查看 5 秒视频构想与服务状态",
   "back": "返回作品",
   "continue": "分享不是终点，故事还可以继续。",
-  "link": "预览链接"
+  "link": "预览链接",
+  "permissionLoading": "正在确认导出权限…",
+  "permissionUnavailable": "导出权限暂时无法确认，保持关闭。",
+  "permissionHold": "独立导出审核尚未配置，导出保持关闭。",
+  "permissionNoDelivery": "当前未提供个人海报下载能力，导出保持关闭。",
+  "shareUnavailableTitle": "此预览链接已不可用",
+  "shareUnavailableBody": "链接可能已过期、已被撤销，或不存在。为保护作品隐私，不能确认具体原因。",
+  "shareDisabledTitle": "此环境暂不支持预览链接",
+  "shareDisabledBody": "当前服务未开放此类预览。原作品仍保持私密。",
+  "retry": "重新读取",
+  "create": "开始自己的创作"
 }

@@ -523,3 +523,101 @@
 .ep-page .ep-review.local-review-panel h3 {
   color: #493651;
 }
+/* Personal posters are previews: allow long returned copy to grow, never crop it. */
+.ep-poster.share-preview {
+  aspect-ratio: auto;
+}
+.ep-poster.share-preview .ep-poster-art {
+  height: auto;
+  aspect-ratio: 1.12;
+}
+.ep-poster.share-preview figcaption {
+  min-height: 130px;
+}
+.ep-poster.share-preview figcaption h2,
+.ep-poster.share-preview figcaption > p {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  overflow-wrap: anywhere;
+}
+.ep-poster.share-preview figcaption > p {
+  margin-bottom: 10px;
+}
+.ep-export-explanation .ep-permission-status {
+  color: #725d82;
+  font-size: 11px;
+}
+.ep-unavailable {
+  max-width: 620px;
+  text-align: center;
+  padding: 44px 25px;
+}
+.ep-unavailable-mark {
+  width: 70px;
+  height: 70px;
+  border: 1px solid #d6c4e9;
+  color: #9273b2;
+  display: grid;
+  place-items: center;
+  border-radius: 24px;
+  margin: 0 auto 22px;
+  background: #eee5fa;
+}
+.ep-unavailable h1 {
+  font-size: 27px;
+  line-height: 1.4;
+}
+.ep-unavailable > p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #82708f;
+}
+.ep-unavailable > div:last-child {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 25px;
+}
+/* CN07 participation is a light invitation beneath the dark story artwork. */
+.public-share .public-participation {
+  margin-top: 22px;
+  padding: 25px;
+  background: #fbfaff;
+  color: #292137;
+  border: 1px solid #e8e0f4;
+  border-radius: 25px;
+  box-shadow: 0 16px 40px #0804131a;
+}
+.public-share .public-participation .inline-note {
+  background: #f1ebf9;
+  border: 1px solid #e1d4ee;
+  color: #7b648f;
+  margin-top: 0;
+  font-size: 12px;
+}
+.public-share .public-participation .caption {
+  color: #6f5f80;
+  margin: 20px 0;
+  line-height: 1.8;
+}
+.public-share .public-participation .fineprint {
+  color: #8b779f;
+  margin: 15px 0 0;
+  line-height: 1.7;
+}
+.public-share .public-participation .btn.primary {
+  color: #fff;
+  background: linear-gradient(105deg, #6cbcff, #9781ee, #e48acb);
+  border: 0;
+  box-shadow: 0 8px 22px #ad86cd26;
+}
+@media (max-width: 650px) {
+  .public-share .public-participation {
+    padding: 22px 18px;
+    border-radius: 23px;
+  }
+  .public-share .public-participation .caption {
+    font-size: 14px;
+  }
+}

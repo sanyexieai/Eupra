@@ -32,3 +32,9 @@ This is a working local product implementation, not full production MVP acceptan
 ## Repository and test provenance
 
 Development publication is limited to the user-specified repository's working branch. The default branch contains only a minimal introduction; no merge, deployment or release is authorized. Exact executed results belong in `qa/QA-REPORT.md`; planned tests must not be reported as passed.
+
+## CN core follow-on (local, not yet browser accepted)
+
+Private creation drafts now persist full text and private source references with optimistic revision checks, owner-only reads and recoverable trash. Works can be moved to trash/restored without rewriting immutable lineage; deletion revokes preview links and suppresses pending child commits. Old capabilities are not revived by restore. A server-owned retry endpoint reuses the complete original input only for failed/cancelled jobs and rechecks all permissions. Export permission is an explicit owner-only fail-closed contract, not a review queue.
+
+Frontend adds actual welcome file/camera handoff, saved-draft resume, trash/restore management, confirmed cancellation, honest terminal state, source-preserving retry, current-work video/quota navigation and privacy-preserving unavailable-share messages. Route-specific chrome and original collage proportions are being corrected against supplied image pixels. These changes require their own consolidated exact-head CI and per-page visual comparison before browser acceptance; the earlier green checkpoint does not certify them.

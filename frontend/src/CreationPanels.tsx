@@ -23,6 +23,8 @@ type Draft = {
   file: File | null;
   preview: string;
   sample: boolean;
+  source_id?: string | null;
+  parent_version_id?: string | null;
 };
 type App = {
   locale: string;
@@ -75,7 +77,13 @@ export async function sampleFile(asset: string, mime: string): Promise<File> {
   }
   return new File([blob], asset.replace(/\.svg$/, ".png"), { type: mime });
 }
-export function CreationWorkbench({ app }: { app: App }) {
+export function CreationWorkbench({
+  app,
+  draftId,
+}: {
+  app: App;
+  draftId?: string;
+}) {
   const {
     t,
     draft,
@@ -90,6 +98,86 @@ export function CreationWorkbench({ app }: { app: App }) {
   } = app;
   const c = (key: Key) => (locale === "zh-CN" ? zh : en)[key];
   const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState<{ id: string; revision: number } | null>(
+    null,
+  );
+  const [restoring, setRestoring] = useState(false);
+  const [restoreFailed, setRestoreFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setSaved(null);
+    setRestoreFailed(false);
+    if (!draftId) {
+      setRestoring(false);
+      return;
+    }
+    if (!user) return;
+    setRestoring(true);
+    api("/drafts/" + encodeURIComponent(draftId))
+      .then((d) => {
+        if (!active) return;
+        setDraft({
+          mode: d.source_id ? (d.text ? "mix" : "photo") : "text",
+          text: d.text || "",
+          file: null,
+          preview: d.source_url || "",
+          sample: false,
+          source_id: d.source_id,
+          parent_version_id: d.parent_version_id,
+        });
+        setSaved({ id: d.id, revision: d.revision });
+      })
+      .catch((e) => {
+        if (active) {
+          setRestoreFailed(true);
+          error(e);
+        }
+      })
+      .finally(() => {
+        if (active) setRestoring(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [draftId, user?.id]);
+  const saveDraft = async () => {
+    if (busy || restoring || loadingSample) return;
+    if (!user) {
+      setAuth(true);
+      return;
+    }
+    if (!draft.file && !draft.source_id && !draft.text.trim()) {
+      setNotice(t("needInput"));
+      return;
+    }
+    setBusy(true);
+    try {
+      let source_id = draft.mode === "text" ? null : draft.source_id;
+      if (draft.file && draft.mode !== "text") {
+        const form = new FormData();
+        form.append("file", draft.file);
+        source_id = (await api("/uploads", { method: "POST", body: form })).id;
+        setDraft({ ...draft, file: null, source_id });
+      }
+      const result = await api(saved ? "/drafts/" + saved.id : "/me/drafts", {
+        method: saved ? "PATCH" : "POST",
+        body: JSON.stringify({
+          title: draft.text.trim().slice(0, 60) || c("untitledDraft"),
+          text: draft.mode === "photo" ? "" : draft.text,
+          source_id: source_id || null,
+          parent_version_id: draft.parent_version_id || null,
+          locale,
+          ...(saved ? { expected_revision: saved.revision } : {}),
+        }),
+      });
+      setSaved({ id: result.id, revision: result.revision });
+      setNotice(c("draftSaved"));
+    } catch (e) {
+      error(e);
+    } finally {
+      setBusy(false);
+    }
+  };
   const [loadingSample, setLoadingSample] = useState(false);
   const [drag, setDrag] = useState(false);
   const picker = useRef<HTMLInputElement>(null);
@@ -127,6 +215,7 @@ export function CreationWorkbench({ app }: { app: App }) {
     replacePreview({
       ...draft,
       file,
+      source_id: null,
       preview: URL.createObjectURL(file),
       sample: false,
     });
@@ -146,6 +235,7 @@ export function CreationWorkbench({ app }: { app: App }) {
         ...draft,
         mode: draft.mode === "text" ? "photo" : draft.mode,
         file,
+        source_id: null,
         preview: "/assets/" + sample.asset,
         sample: true,
       });
@@ -157,7 +247,14 @@ export function CreationWorkbench({ app }: { app: App }) {
     }
   };
   const submit = async () => {
-    if (busy || loadingSample) return;
+    if (
+      busy ||
+      loadingSample ||
+      restoring ||
+      restoreFailed ||
+      (draftId && !user)
+    )
+      return;
     if (!config?.generation_enabled) {
       setNotice(t("providerOff"));
       return;
@@ -167,16 +264,19 @@ export function CreationWorkbench({ app }: { app: App }) {
       return;
     }
     if (
-      (draft.mode === "photo" && !draft.file) ||
+      (draft.mode === "photo" && !draft.file && !draft.source_id) ||
       (draft.mode === "text" && !draft.text.trim()) ||
-      (draft.mode === "mix" && !draft.file && !draft.text.trim())
+      (draft.mode === "mix" &&
+        !draft.file &&
+        !draft.source_id &&
+        !draft.text.trim())
     ) {
       setNotice(t("needInput"));
       return;
     }
     setBusy(true);
     try {
-      let source_id;
+      let source_id = draft.mode === "text" ? undefined : draft.source_id;
       if (draft.file && draft.mode !== "text") {
         const form = new FormData();
         form.append("file", draft.file);
@@ -186,7 +286,8 @@ export function CreationWorkbench({ app }: { app: App }) {
         method: "POST",
         headers: { "Idempotency-Key": crypto.randomUUID() },
         body: JSON.stringify({
-          kind: "first_twist",
+          kind: draft.parent_version_id ? "continuation" : "first_twist",
+          parent_version_id: draft.parent_version_id || undefined,
           text: draft.mode === "photo" ? undefined : draft.text,
           source_id,
           locale: locale === "zh-CN" ? "zh-CN" : "en",
@@ -206,6 +307,13 @@ export function CreationWorkbench({ app }: { app: App }) {
   };
   return (
     <div className="cp-workbench workbench">
+      {draftId && !user && (
+        <button className="btn" onClick={() => setAuth(true)}>
+          {t("login")}
+        </button>
+      )}
+      {restoring && <p role="status">{c("draftLoading")}</p>}
+      {restoreFailed && <p role="alert">{c("draftLoadFailed")}</p>}
       <section className="cp-input-card">
         <div className="cp-tabs" role="group" aria-label={t("createTitle")}>
           {(["photo", "text", "mix"] as Mode[]).map((mode, i) => (
@@ -268,6 +376,7 @@ export function CreationWorkbench({ app }: { app: App }) {
                       replacePreview({
                         ...draft,
                         file: null,
+                        source_id: null,
                         preview: "",
                         sample: false,
                       });
@@ -330,7 +439,7 @@ export function CreationWorkbench({ app }: { app: App }) {
             <textarea
               aria-label={t("text")}
               placeholder={t("placeholder")}
-              maxLength={420}
+              maxLength={2000}
               disabled={loadingSample || busy}
               value={draft.text}
               onChange={(e) => setDraft({ ...draft, text: e.target.value })}
@@ -391,6 +500,16 @@ export function CreationWorkbench({ app }: { app: App }) {
         </div>
         <p className="cp-sample-label">{c("sampleLabel")}</p>
       </section>
+      <div className="cp-draft-actions">
+        <button
+          className="btn"
+          disabled={busy || restoring || loadingSample || restoreFailed}
+          onClick={saveDraft}
+        >
+          {c("saveDraft")}
+        </button>
+        <small>{c("draftPrivacy")}</small>
+      </div>
       <div className="cp-create-action">
         {config && !config.generation_enabled && (
           <div className="cp-provider-note" id="creation-provider-status">
@@ -403,7 +522,7 @@ export function CreationWorkbench({ app }: { app: App }) {
               ? "creation-provider-status"
               : undefined
           }
-          disabled={busy || loadingSample}
+          disabled={busy || loadingSample || restoring || restoreFailed}
           onClick={submit}
         >
           {busy || loadingSample ? (
@@ -511,15 +630,17 @@ export function JobTheater({
         </div>
       </div>
       <div className="cp-job-progress" role="status">
-        <strong>{c("progress")}</strong>
-        <div className="cp-stage-bars" aria-hidden="true">
-          {[0, 1, 2, 3].map((i) => (
-            <span
-              key={i}
-              className={job && i <= stage && !failed ? "on" : ""}
-            />
-          ))}
-        </div>
+        {!terminal && <strong>{c("progress")}</strong>}
+        {!terminal && (
+          <div className="cp-stage-bars" aria-hidden="true">
+            {[0, 1, 2, 3].map((i) => (
+              <span
+                key={i}
+                className={job && i <= stage && !failed ? "on" : ""}
+              />
+            ))}
+          </div>
+        )}
         <p>
           {failed
             ? c("network")
@@ -540,7 +661,7 @@ export function JobTheater({
               )}
         </p>
       </div>
-      <p className="cp-timing">{c("timing")}</p>
+      {!terminal && <p className="cp-timing">{c("timing")}</p>}
       {children}
     </section>
   );
