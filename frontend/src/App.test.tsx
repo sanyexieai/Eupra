@@ -599,9 +599,12 @@ describe("unified application integration", () => {
     const video = screen.getByLabelText(
       "Pre-made five-second design demonstration",
     );
-    expect(video.getAttribute("src")).toBe(
-      "/assets/cn12_cinematic_demo_5s_en.mp4",
+    expect(video.querySelector("source")?.getAttribute("src")).toBe(
+      "/assets/cn12_cinematic_demo_5s_en.webm",
     );
+    expect(
+      video.querySelector('source[type="video/mp4"]')?.getAttribute("src"),
+    ).toBe("/assets/cn12_cinematic_demo_5s_en.mp4");
     expect(video.hasAttribute("controls")).toBe(true);
     expect(
       screen.getByText(
@@ -610,7 +613,42 @@ describe("unified application integration", () => {
     ).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Interface language" }));
     expect(
-      screen.getByLabelText("预制5秒设计视频演示").getAttribute("src"),
+      screen
+        .getByLabelText("预制5秒设计视频演示")
+        .querySelector('source[type="video/mp4"]')
+        ?.getAttribute("src"),
     ).toBe("/assets/cn12_cinematic_demo_5s.mp4");
+  });
+  it("shows a truthful playback error and original-file fallback", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    mount("/");
+    fireEvent.error(
+      screen.getByLabelText("Pre-made five-second design demonstration"),
+    );
+    expect(screen.getByRole("alert").textContent).toContain("could not play");
+    const download = screen.getByRole("link", {
+      name: "Download original design video (MP4)",
+    });
+    expect(download.getAttribute("href")).toBe(
+      "/assets/cn12_cinematic_demo_5s_en.mp4",
+    );
+    expect(download.hasAttribute("download")).toBe(true);
+  });
+  it("does not swallow a rejected explicit play request", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockRejectedValue(new Error("codec unsupported"));
+    mount("/");
+    const video = screen.getByLabelText(
+      "Pre-made five-second design demonstration",
+    );
+    video.scrollIntoView = vi.fn();
+    fireEvent.click(screen.getByRole("button", { name: "Play design video" }));
+    await waitFor(() =>
+      expect(screen.getByRole("alert").textContent).toContain("could not play"),
+    );
+    expect(play).toHaveBeenCalledOnce();
+    play.mockRestore();
   });
 });

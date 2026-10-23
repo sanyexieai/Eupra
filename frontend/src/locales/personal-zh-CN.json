@@ -83,5 +83,7 @@
   "faq2Body": "当前没有可购买套餐，也不会发起扣款。",
   "chooseWork": "从作品开始",
   "loginCredits": "登录后读取你的真实余额",
-  "settingsReadError": "未能读取设置，重试后再修改。"
+  "settingsReadError": "未能读取设置，重试后再修改。",
+  "demoPlay": "播放设计演示",
+  "demoPlaybackError": "此浏览器暂时无法播放演示。可以下载原始视频，在支持的播放器中打开。"
 }

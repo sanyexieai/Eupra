@@ -228,5 +228,7 @@
   "landingVideoNote": "预制设计演示，非实时生成。真实视频生成尚未开放。",
   "landingVideoLabel": "预制5秒设计视频演示",
   "landingVideoPlay": "体验视频效果",
-  "closingKicker": "你的下一幕，自己来写。"
+  "closingKicker": "你的下一幕，自己来写。",
+  "landingVideoError": "当前浏览器无法播放设计视频。请下载原始 MP4，使用支持的播放器观看。",
+  "landingVideoDownload": "下载原始设计视频（MP4）"
 }

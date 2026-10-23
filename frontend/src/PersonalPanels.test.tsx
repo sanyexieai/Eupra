@@ -138,7 +138,7 @@ describe("personal panels", () => {
     expect(screen.queryByRole("progressbar")).toBeNull();
     expect(screen.getByText("—")).toBeTruthy();
   });
-  it("plays the labeled design clip without creating a job or spending credits", async () => {
+  it("offers the labeled design clip without creating a job or spending credits", async () => {
     render(
       <MemoryRouter>
         <VideoStudio app={makeApp()} version={version} />
@@ -154,9 +154,16 @@ describe("personal panels", () => {
     fireEvent.click(screen.getByRole("button", { name: en.demo }));
     const dialog = screen.getByRole("dialog");
     expect(dialog.textContent).toContain(en.demoBody);
-    expect(dialog.querySelector("video")?.getAttribute("src")).toBe(
+    const sources = dialog.querySelectorAll("video source");
+    expect(sources[0].getAttribute("src")).toBe(
+      "/assets/cn12_cinematic_demo_5s_en.webm",
+    );
+    expect(sources[1].getAttribute("src")).toBe(
       "/assets/cn12_cinematic_demo_5s_en.mp4",
     );
+    expect(
+      screen.getByRole("link", { name: en.download }).getAttribute("href"),
+    ).toBe("/assets/cn12_cinematic_demo_5s_en.mp4");
     expect(post).not.toHaveBeenCalled();
     expect(
       call.mock.calls.every(([path]) => path === "/me/video-credits"),
@@ -218,5 +225,36 @@ describe("video credit context", () => {
     expect(
       screen.getByRole("link", { name: en.back }).getAttribute("href"),
     ).toBe("/settings");
+  });
+});
+
+describe("demo playback fallback", () => {
+  it("shows a visible error and keeps original download after media failure", () => {
+    render(
+      <MemoryRouter>
+        <VideoStudio app={makeApp()} version={version} />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: en.demo }));
+    fireEvent.error(document.querySelector("video")!);
+    expect(screen.getByRole("alert").textContent).toBe(en.demoPlaybackError);
+    expect(
+      screen.getByRole("link", { name: en.download }).getAttribute("href"),
+    ).toMatch(/_en\.mp4$/);
+  });
+  it("does not silently ignore a rejected play request", async () => {
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockRejectedValue(new Error("unsupported"));
+    render(
+      <MemoryRouter>
+        <VideoStudio app={makeApp()} version={version} />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: en.demo }));
+    fireEvent.click(screen.getByRole("button", { name: en.demoPlay }));
+    await screen.findByRole("alert");
+    expect(screen.getByText(en.demoPlaybackError)).toBeTruthy();
+    play.mockRestore();
   });
 });

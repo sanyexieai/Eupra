@@ -460,6 +460,11 @@ export function VideoStudio({
   const [action, setAction] = useState("action1");
   const [custom, setCustom] = useState("");
   const [demo, setDemo] = useState(false);
+  const [mediaFailed, setMediaFailed] = useState(false);
+  const demoVideo = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    setMediaFailed(false);
+  }, [app.locale, demo]);
   const src =
     "/assets/cn12_cinematic_demo_5s" +
     (app.locale === "zh-CN" ? "" : "_en") +
@@ -568,12 +573,40 @@ export function VideoStudio({
           <p>{t("demoBody")}</p>
           <video
             key={src}
-            src={src}
+            ref={demoVideo}
             controls
             playsInline
             preload="metadata"
             aria-label={t("demoTitle")}
-          />
+            onError={() => setMediaFailed(true)}
+            onPlaying={() => setMediaFailed(false)}
+          >
+            <source src={src.replace(/\.mp4$/, ".webm")} type="video/webm" />
+            <source
+              src={src}
+              type="video/mp4"
+              onError={() => setMediaFailed(true)}
+            />
+          </video>
+          {mediaFailed && (
+            <p className="pp-unavailable" role="alert">
+              {t("demoPlaybackError")}
+            </p>
+          )}
+          <button
+            className="pp-light-button"
+            onClick={async () => {
+              try {
+                if (!demoVideo.current) throw new Error("Media unavailable");
+                await demoVideo.current.play();
+              } catch {
+                setMediaFailed(true);
+              }
+            }}
+          >
+            <Play size={18} />
+            {t("demoPlay")}
+          </button>
           <a className="pp-gradient-button" href={src} download>
             <Download size={18} />
             {t("download")}

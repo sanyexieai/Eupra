@@ -26,12 +26,40 @@
       "duplicate_reference_count": 3
     },
     {
+      "file": "frontend/public/assets/cn12_cinematic_demo_5s.webm",
+      "bytes": 200491,
+      "sha256": "5229ae9d5f9df9f522f9dbdade570c89d3c409e3eb340a49f897ed38324bad3c",
+      "exact_original_match": false,
+      "original_reference": null,
+      "duplicate_reference_count": 0,
+      "derivative": {
+        "source": "frontend/public/assets/cn12_cinematic_demo_5s.mp4",
+        "source_sha256": "7153c6ab2c92a5c201ba7937198f4d5d7a21fc97c536db2a200bbbdcae2314a4",
+        "purpose": "Browser-compatible VP9/WebM transcode of the supplied five-second design demonstration; not newly generated media.",
+        "transform": "ffmpeg -i SOURCE.mp4 -c:v libvpx-vp9 -crf 32 -b:v 0 -pix_fmt yuv420p -an OUTPUT.webm"
+      }
+    },
+    {
       "file": "frontend/public/assets/cn12_cinematic_demo_5s_en.mp4",
       "bytes": 133334,
       "sha256": "8dabf2589a9ca13fca5fdb17ee5139210a6d26d89140caec02797467ca0c51a3",
       "exact_original_match": true,
       "original_reference": "Eupra发生_MVP1.0/Eupra_V0.2_CN-12/CN-12/assets/cn12_cinematic_demo_5s_en.mp4",
       "duplicate_reference_count": 3
+    },
+    {
+      "file": "frontend/public/assets/cn12_cinematic_demo_5s_en.webm",
+      "bytes": 197539,
+      "sha256": "20de0621e4de743012f3a410396b49cfa3a2df3870dcbd5bdca44f28ca436e5b",
+      "exact_original_match": false,
+      "original_reference": null,
+      "duplicate_reference_count": 0,
+      "derivative": {
+        "source": "frontend/public/assets/cn12_cinematic_demo_5s_en.mp4",
+        "source_sha256": "8dabf2589a9ca13fca5fdb17ee5139210a6d26d89140caec02797467ca0c51a3",
+        "purpose": "Browser-compatible VP9/WebM transcode of the supplied five-second design demonstration; not newly generated media.",
+        "transform": "ffmpeg -i SOURCE.mp4 -c:v libvpx-vp9 -crf 32 -b:v 0 -pix_fmt yuv420p -an OUTPUT.webm"
+      }
     },
     {
       "file": "frontend/public/assets/demo-source.webp",

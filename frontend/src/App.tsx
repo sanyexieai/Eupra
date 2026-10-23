@@ -337,6 +337,10 @@ function MobileNav() {
 function Landing() {
   const { t, locale } = useApp();
   const video = useRef<HTMLVideoElement>(null);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const videoBase =
+    locale === "zh-CN" ? "cn12_cinematic_demo_5s" : "cn12_cinematic_demo_5s_en";
+  useEffect(() => setVideoFailed(false), [locale]);
   return (
     <>
       <main className="landing">
@@ -506,12 +510,12 @@ function Landing() {
                 preload="metadata"
                 poster={asset("cat-ceo-hero.webp")}
                 aria-label={t("landingVideoLabel")}
-                src={asset(
-                  locale === "zh-CN"
-                    ? "cn12_cinematic_demo_5s.mp4"
-                    : "cn12_cinematic_demo_5s_en.mp4",
-                )}
-              />
+                onError={() => setVideoFailed(true)}
+                onPlaying={() => setVideoFailed(false)}
+              >
+                <source src={asset(videoBase + ".webm")} type="video/webm" />
+                <source src={asset(videoBase + ".mp4")} type="video/mp4" />
+              </video>
               <span>{t("example")}</span>
             </div>
             <div>
@@ -526,12 +530,20 @@ function Landing() {
                     block: "center",
                     behavior: "smooth",
                   });
-                  video.current?.play().catch(() => {});
+                  video.current?.play().catch(() => setVideoFailed(true));
                 }}
               >
                 {t("landingVideoPlay")}
                 <ArrowUpRight size={18} />
               </button>
+              {videoFailed && <p role="alert">{t("landingVideoError")}</p>}
+              <a
+                className="text-button"
+                href={asset(videoBase + ".mp4")}
+                download
+              >
+                {t("landingVideoDownload")}
+              </a>
               <Link className="text-button" to="/balance">
                 {t("credits")}
                 <ArrowRight size={16} />

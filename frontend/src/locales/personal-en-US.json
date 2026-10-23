@@ -83,5 +83,7 @@
   "faq2Body": "No plans are available for purchase, and no payment will be initiated.",
   "chooseWork": "Start from your works",
   "loginCredits": "Sign in to load your actual balance",
-  "settingsReadError": "Could not load settings. Retry before making changes."
+  "settingsReadError": "Could not load settings. Retry before making changes.",
+  "demoPlay": "Play design demo",
+  "demoPlaybackError": "This browser could not play the demo. Download the original video and open it in a supported player."
 }

@@ -228,5 +228,7 @@
   "landingVideoNote": "Pre-made design demonstration only. Live video generation is not available.",
   "landingVideoLabel": "Pre-made five-second design demonstration",
   "landingVideoPlay": "Play design video",
-  "closingKicker": "Your next scene starts here."
+  "closingKicker": "Your next scene starts here.",
+  "landingVideoError": "This browser could not play the design video. Download the original MP4 to watch it in a supported player.",
+  "landingVideoDownload": "Download original design video (MP4)"
 }

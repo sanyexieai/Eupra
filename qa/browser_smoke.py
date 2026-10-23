@@ -43,7 +43,7 @@ try:
    page.get_by_role('heading',name='Live the impossible.').wait_for()
    passed('language switches landing to English')
    player=page.get_by_label('Pre-made five-second design demonstration',exact=True)
-   expect(player).to_have_attribute('src','/assets/cn12_cinematic_demo_5s_en.mp4')
+   expect(player.locator('source').first).to_have_attribute('src','/assets/cn12_cinematic_demo_5s_en.webm')
    page.get_by_role('button',name='Play design video',exact=True).click()
    page.wait_for_function("el => el.currentTime > 0.1",arg=player.element_handle())
    player.evaluate('el=>el.pause()')
@@ -205,6 +205,16 @@ try:
    assert payload[:8]==b'\x89PNG\r\n\x1a\n'
    assert struct.unpack('>II',payload[16:24])==(1080,1350)
    passed('official-example poster downloads an actual 1080×1350 PNG')
+   if root_id:
+    before_credits=page.request.get(BASE+'/api/v1/me/video-credits').json()
+    page.goto(BASE+'/video/'+root_id)
+    page.get_by_role('button',name='Watch the local design demo',exact=True).click()
+    demo_player=page.get_by_label('Local 5-second design demo',exact=True)
+    page.get_by_role('button',name='Play design demo',exact=True).click()
+    page.wait_for_function('el => el.currentTime > 0.1',arg=demo_player.element_handle())
+    demo_player.evaluate('el=>el.pause()')
+    assert page.request.get(BASE+'/api/v1/me/video-credits').json()==before_credits
+    passed('CN-12 labeled original design video plays without spending credits')
    # Actual supplied sources populate the creation draft; SVG sources rasterize locally.
    page.goto(BASE+'/create'); page.get_by_role('button',name='Photo',exact=True).click()
    for label,source in [('My cat','example-cat.jpg'),('Everyday run','example-run.svg'),('Impossible trip','example-world.svg')]:
@@ -305,7 +315,8 @@ try:
    from urllib.parse import urlparse
    path=urlparse(page.url).path
    if path.startswith('/s/'): path='/s/[capability-redacted]'
-   (ART/('failure-'+MODE+'.json')).write_text(json.dumps({'path':path,'error_type':type(exc).__name__,'checks_passed':checks},indent=2))
+   media=page.locator('video').evaluate_all("els=>els.map(el=>({file:(el.currentSrc||'').split('/').pop(),readyState:el.readyState,networkState:el.networkState,errorCode:el.error?.code||null,currentTime:el.currentTime,paused:el.paused}))")
+   (ART/('failure-'+MODE+'.json')).write_text(json.dumps({'path':path,'error_type':type(exc).__name__,'checks_passed':checks,'media':media},indent=2))
    raise
   browser.close()
  result={'mode':MODE,'checks':checks,'captures':captures,'limits':['Explicit local template demo only; not live image generation.','CN-03 live transition exercised; separate terminal-cancel screenshot only when actual cancellation wins the worker race.','Production sharing/export remains held.']}
