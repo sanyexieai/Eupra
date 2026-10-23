@@ -651,4 +651,26 @@ describe("unified application integration", () => {
     expect(play).toHaveBeenCalledOnce();
     play.mockRestore();
   });
+  it.each(["/create", "/settings", "/jobs/j1", "/share/v1"])(
+    "uses light app chrome without a website footer on %s",
+    async (path) => {
+      localStorage.setItem("eupra.locale", "en-US");
+      mount(path);
+      expect(document.querySelector(".site.light-app-shell")).not.toBeNull();
+      expect(document.querySelector("footer")).toBeNull();
+      expect(
+        screen.getByRole("button", { name: "Interface language" }),
+      ).toBeTruthy();
+      expect(document.querySelector("header nav")).toBeNull();
+      if (path === "/settings")
+        expect(
+          document.querySelector('header a[href="#personal-preferences"]'),
+        ).not.toBeNull();
+    },
+  );
+  it("retains the website footer only on the marketing landing", () => {
+    mount("/");
+    expect(document.querySelector("footer")).not.toBeNull();
+    expect(document.querySelector("header nav")).not.toBeNull();
+  });
 });

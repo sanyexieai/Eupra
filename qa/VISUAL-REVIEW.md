@@ -1,3 +1,7 @@
+# Current visual-review scope
+
+The detailed original-versus-runtime comparison is now in `DESIGN-FIDELITY.md`, covering all CN01–13 and WEB01 on desktop/mobile. The 52c274 screenshot set was inspected despite that run failing a later ambiguous test selector; it is visual evidence, not a successful functional run. The next exact functional checkpoint 4ac763 passed run 39915775683 with 89 bilingual captures. Later pale app chrome and mobile WEB corrections await their own exact-head screenshots. Earlier historical findings below are retained as history, not an assertion that every listed defect remains current.
+
 # Runtime visual review: baseline and targeted recheck
 
 Reviewed 2026-10-23 UTC. This is an actual pixel review of downloaded runtime screenshots, not a filename or source-code-only inspection. No application source was edited and no browser was launched for this review.

@@ -1,4 +1,4 @@
-# Implementation status: development checkpoint 0.2
+# Implementation status: development checkpoint 0.4
 
 This is a working local product implementation, not full production MVP acceptance. The original handoff remains the target. See `PAGE-COVERAGE.md` for the independently audited 20-page matrix.
 
@@ -27,14 +27,14 @@ This is a working local product implementation, not full production MVP acceptan
 - No email verification/password recovery, staff moderation interface or comprehensive production abuse defenses.
 - SQLite/in-process queue/private local files remain development choices, not production Postgres/Redis/object storage.
 - No completed model-quality experiment. 56 evaluation cases still require authorized real photos; no human blind review or retention experiment.
-- Local Chromium launch remains blocked, but authorized GitHub CI successfully executed desktop/mobile-viewport Chromium checks on commit `0d235b280650b9f2da7537b639d12444b0e9cd25` (bilingual desktop/mobile, run 39908362744). The subsequent production-review copy clarification in `b611fcaace859484cc57977d795c4d0c78eedf16` also passed run 39908730333 (19 Rust, 43 component, 21+14 browser checks); current evidence and remaining defects are recorded in `qa/QA-REPORT.md` and `qa/VISUAL-REVIEW.md`. No physical-device, cross-browser or pixel-perfect parity claim.
+- Local Chromium launch remains blocked. Authorized GitHub CI passed exact commit `4ac763c494e604b684644d58d0966e26e10fa19e`, run 39915775683: 24 Rust, 64 component and 29+19 real-browser checks, 89 bilingual desktop/mobile-viewport captures. Later chrome refinements have 69 local component tests but require their own CI. No physical-device, cross-browser or pixel-perfect parity claim. See `qa/QA-REPORT.md` and `qa/DESIGN-FIDELITY.md`.
 
 ## Repository and test provenance
 
 Development publication is limited to the user-specified repository's working branch. The default branch contains only a minimal introduction; no merge, deployment or release is authorized. Exact executed results belong in `qa/QA-REPORT.md`; planned tests must not be reported as passed.
 
-## CN core follow-on (local, not yet browser accepted)
+## CN core follow-on (accepted at the exact revision above)
 
 Private creation drafts now persist full text and private source references with optimistic revision checks, owner-only reads and recoverable trash. Works can be moved to trash/restored without rewriting immutable lineage; deletion revokes preview links and suppresses pending child commits. Old capabilities are not revived by restore. A server-owned retry endpoint reuses the complete original input only for failed/cancelled jobs and rechecks all permissions. Export permission is an explicit owner-only fail-closed contract, not a review queue.
 
-Frontend adds actual welcome file/camera handoff, saved-draft resume, trash/restore management, confirmed cancellation, honest terminal state, source-preserving retry, current-work video/quota navigation and privacy-preserving unavailable-share messages. Route-specific chrome and original collage proportions are being corrected against supplied image pixels. These changes require their own consolidated exact-head CI and per-page visual comparison before browser acceptance; the earlier green checkpoint does not certify them.
+Frontend adds actual welcome file/camera handoff, saved-draft resume, trash/restore management, confirmed cancellation, honest terminal state, source-preserving retry, current-work video/quota navigation and privacy-preserving unavailable-share messages. These functional loops passed the exact v0.4 browser run above. Original-asset layout is compared page by page in `qa/DESIGN-FIDELITY.md`. Later pale route chrome/mobile WEB refinements remain locally tested only until their separate exact-head CI completes.

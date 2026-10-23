@@ -203,10 +203,15 @@ export default function App() {
         className={
           "site " +
           (location.pathname === "/create"
-            ? "creation-shell"
-            : location.pathname === "/welcome"
-              ? "welcome-shell"
-              : "")
+            ? "creation-shell light-app-shell"
+            : location.pathname === "/settings"
+              ? "settings-shell light-app-shell"
+              : location.pathname.startsWith("/jobs/") ||
+                  location.pathname.startsWith("/share/")
+                ? "light-app-shell"
+                : location.pathname === "/welcome"
+                  ? "welcome-shell"
+                  : "")
         }
       >
         <Header />
@@ -240,7 +245,7 @@ export default function App() {
           <Route path="/examples/:id" element={<Example />} />
           <Route path="*" element={<Unavailable />} />
         </Routes>
-        {!["/create", "/welcome"].includes(location.pathname) && (
+        {location.pathname === "/" && (
           <footer>
             <Logo />
             <span>{t("copyright")}</span>
@@ -265,7 +270,7 @@ export default function App() {
 function Header() {
   const { t, locale, setLocale, user, setAuth } = useApp();
   const { pathname } = useLocation();
-  const compact = ["/create", "/welcome"].includes(pathname);
+  const compact = pathname !== "/";
   return (
     <header>
       <div className="header-brand">
@@ -290,7 +295,15 @@ function Header() {
           <Globe size={17} />
           <span>{locale === "zh-CN" ? "中文" : "EN"}</span>
         </button>
-        {user ? (
+        {pathname === "/settings" ? (
+          <a
+            className="account-button"
+            aria-label={t("settings")}
+            href="#personal-preferences"
+          >
+            <Settings size={19} />
+          </a>
+        ) : user ? (
           <Link
             className="account-button"
             aria-label={t("settings")}
@@ -1371,7 +1384,6 @@ function PublicShare() {
       <VersionVisual t={t} v={v} large />
       <section className="public-participation">
         <p className="inline-note">{t("localPreviewNote")}</p>
-        <p className="caption">{v.caption}</p>
         <Btn
           kind="primary wide"
           disabled={busy || !v.remix_allowed}

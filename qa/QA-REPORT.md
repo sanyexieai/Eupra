@@ -1,6 +1,19 @@
 # QA report — engineering checkpoints
 
-## Latest tested application revision
+## Latest tested application revision: v0.4 CN recovery loops
+
+Exact tested commit: `4ac763c494e604b684644d58d0966e26e10fa19e`.
+Run: https://github.com/sanyexieai/Eupra/actions/runs/39915775683 (success, 2026-10-23 07:11 UTC).
+
+- 24 Rust and 64 component tests; API 5 unavailable + 27 demo checks; provider, local-share and private-asset security; 13 offline evaluation regressions passed.
+- 29 demo + 19 unconfigured real-browser checks passed with 61 + 28 Chinese/English desktop/mobile-viewport captures. Real flows include private text/photo draft persistence across reload, anonymous source denial, recoverable draft/work deletion, child-lineage preservation, permanent old-link revocation after restore, full-source terminal-job retry and actual original-demo video playback without spending credits.
+- 18 shipped media files verify against the manifest: 16 byte-identical original assets plus 2 documented WebM derivatives for Chromium playback. They are never substituted for a user's generated output.
+- Artifact 12484992103: 49,530,872 bytes; GitHub digest SHA256 `dd7e5280f06bb6466c1a1826c259679879a8da9c556e5bca766230948e25af98`.
+- Subsequent pale route chrome, responsive WEB ordering and duplicate-caption fixes pass 69 local component tests and build. They await a separate exact-head CI; this result must not be transferred to those changes.
+- Previous v0.4 runs exposed genuine MP4 compatibility, English draft-locale and test-selector issues, all corrected before this run. An unrelated slow Ubuntu package mirror caused a 20-minute timeout; bounded official-mirror installation now succeeds. No failed run counts as an acceptance pass.
+- Live providers, model quality, independent safety, personal media export, production public sharing, payments, deployment and GLOBAL remain unaccepted. Physical-device/cross-browser and pixel-perfect parity are not claimed.
+
+## Previous v0.3 tested application revision
 
 Exact tested commit: `b611fcaace859484cc57977d795c4d0c78eedf16`.
 Run: https://github.com/sanyexieai/Eupra/actions/runs/39908730333 (success, 2026-10-23 06:02 UTC).

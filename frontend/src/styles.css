@@ -3409,3 +3409,144 @@ footer > a:last-child {
     width: 150px;
   }
 }
+/* CN light app pages have one coherent canvas and app navigation, not WEB chrome. */
+.light-app-shell {
+  min-height: 100vh;
+  background: #f8f7fd;
+  color: #222139;
+}
+.light-app-shell > header {
+  height: 76px;
+  max-width: 1120px;
+  color: #242139;
+}
+.light-app-shell > header .brand {
+  color: #242139;
+}
+.light-app-shell > header .language,
+.light-app-shell > header .account-button,
+.light-app-shell > header .login-button {
+  background: #fff;
+  color: #625c79;
+  border: 1px solid #e9e4f4;
+  border-radius: 50px;
+  min-height: 40px;
+  padding: 10px;
+}
+.light-app-shell > .service-banner {
+  background: #eeeaf8;
+  color: #71618c;
+  font-size: 10px;
+  padding: 5px 12px;
+}
+.light-app-shell .mobile-nav {
+  background: #fbfafff5;
+  border-color: #e4dfef;
+  box-shadow: 0 -5px 20px #63548408;
+}
+.light-app-shell .mobile-nav a {
+  color: #797089;
+}
+.light-app-shell .mobile-nav a[href="/create"] svg {
+  color: #9675d1;
+}
+.settings-shell .pp-profile {
+  margin-top: 16px;
+  margin-bottom: 0;
+  padding-bottom: 100px;
+  background: transparent;
+}
+.settings-shell .pp-profile > .pp-topline {
+  display: none;
+}
+.settings-shell > header {
+  padding-inline: 32px;
+}
+@media (max-width: 760px) {
+  .light-app-shell > header {
+    height: 68px;
+    padding: 0 20px;
+    gap: 12px;
+  }
+  .light-app-shell > header .brand {
+    font-size: 22px;
+    gap: 7px;
+  }
+  .light-app-shell > header .brand img {
+    width: 32px;
+    height: 32px;
+  }
+  .light-app-shell > header .brand b {
+    display: none;
+  }
+  .light-app-shell > header .language span {
+    display: none;
+  }
+  .light-app-shell > header .language {
+    width: 40px;
+    justify-content: center;
+  }
+  .settings-shell .pp-profile {
+    margin-top: 0;
+    padding-top: 22px;
+    padding-bottom: calc(95px + env(safe-area-inset-bottom));
+  }
+}
+@media (max-width: 760px) {
+  /* WEB-01 mobile reference: short illustrated rows, then text-led video. */
+  .illustrated-steps article {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 112px;
+    grid-template-rows: auto auto 1fr;
+    column-gap: 12px;
+    padding: 18px;
+  }
+  .illustrated-steps .step-mark {
+    grid-column: 1/-1;
+    margin-bottom: 10px;
+  }
+  .illustrated-steps .step-illustration {
+    grid-column: 2;
+    grid-row: 2/4;
+    height: 112px;
+    align-self: center;
+  }
+  .illustrated-steps h3 {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 16px;
+    margin: 12px 0 7px;
+  }
+  .illustrated-steps p {
+    grid-column: 1;
+    grid-row: 3;
+    font-size: 12px;
+    margin: 0;
+    line-height: 1.7;
+  }
+  .step-illustration img {
+    width: 78px;
+    height: 88px;
+    border-width: 3px;
+  }
+  .step-illustration span {
+    font-size: 17px;
+    right: 2px;
+    top: 12px;
+  }
+  .illustration-3 img {
+    width: 68px;
+    height: 82px;
+    left: 7px;
+  }
+  .illustration-3 img + img {
+    right: 4px;
+    left: auto;
+  }
+  .video-layout > .landing-video-frame {
+    grid-row: 2;
+  }
+  .video-layout > div:not(.landing-video-frame) {
+    grid-row: 1;
+  }
+}
