@@ -51,17 +51,31 @@ export function DraftLibrary({
   const t = (key: keyof typeof zh) => (app.locale === "zh-CN" ? zh : en)[key];
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"drafts" | "trash" | "manage">("drafts");
-  const [items, setItems] = useState<Item[] | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [data, setData] = useState<{
+    key: string;
+    items: Item[] | null;
+    failed: boolean;
+  } | null>(null);
   const [refresh, setRefresh] = useState(0);
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState<Item | null>(null);
   const [mutationError, setMutationError] = useState(false);
+  // A tab/account change must never relabel the previous resource's actions,
+  // even in the first commit before its loading effect has run.
+  const resourceKey = JSON.stringify([
+    open,
+    tab,
+    refresh,
+    app.user?.id,
+    app.locale,
+  ]);
+  const items = data?.key === resourceKey ? data.items : null;
+  const failed = data?.key === resourceKey && data.failed;
+
   useEffect(() => {
     let active = true;
     setConfirm(null);
-    setItems(null);
-    setFailed(false);
+    setData({ key: resourceKey, items: null, failed: false });
     setMutationError(false);
     if (!open || !app.user) return;
     const draftItem = (v: SavedDraft): Item => ({
@@ -96,9 +110,9 @@ export function DraftLibrary({
           const w = await api<{ items: Version[] }>("/me/works");
           next = w.items.map(workItem);
         }
-        if (active) setItems(next);
+        if (active) setData({ key: resourceKey, items: next, failed: false });
       } catch {
-        if (active) setFailed(true);
+        if (active) setData({ key: resourceKey, items: null, failed: true });
       }
     };
     load();
@@ -116,10 +130,16 @@ export function DraftLibrary({
     try {
       if (restore) await post(path + "/restore");
       else await api(path, { method: "DELETE" });
-      setItems(
-        (current) =>
-          current?.filter((v) => v.kind !== item.kind || v.id !== item.id) ||
-          [],
+      setData((current) =>
+        current?.key === resourceKey
+          ? {
+              ...current,
+              items:
+                current.items?.filter(
+                  (v) => v.kind !== item.kind || v.id !== item.id,
+                ) || [],
+            }
+          : current,
       );
       setConfirm(null);
       app.setNotice(t("saved"));

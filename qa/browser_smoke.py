@@ -313,6 +313,7 @@ try:
     assert page.request.get(BASE+'/api/v1/share/'+token).status==404
     assert page.request.get(BASE+'/api/v1/versions/'+child_id).ok
     library.get_by_role('button',name='Trash',exact=True).click()
+    expect(library.locator('.dl-item')).to_have_count(1)
     library.get_by_role('button',name='Restore',exact=True).click()
     library.get_by_text('Trash is empty',exact=True).wait_for()
     assert page.request.get(BASE+'/api/v1/versions/'+root_id).ok
