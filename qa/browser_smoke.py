@@ -325,12 +325,13 @@ try:
      passed('terminal job retry uses full server-retained source input and creates a new job')
      # Delay dispatch, not response data: the real API request is released unchanged.
      # This exercises browser history while the client cannot yet know job status.
-     page.goto(BASE+'/works'); page.locator('.page').wait_for()
+     page.evaluate('(id)=>sessionStorage.setItem("eupra.job",id)',cancelled_job)
+     page.goto(BASE+'/create'); page.locator('a.resume').wait_for()
      pending_routes=[]
      def hold_status(route): pending_routes.append(route)
      status_pattern='**/api/v1/generation-jobs/'+cancelled_job
      page.route(status_pattern,hold_status)
-     page.goto(BASE+'/jobs/'+cancelled_job,wait_until='domcontentloaded')
+     page.locator('a.resume[href="/jobs/'+cancelled_job+'"]').click()
      page.locator('.job-page').wait_for()
      def reject_departure(dialog): dialog.dismiss()
      page.on('dialog',reject_departure)
@@ -338,12 +339,16 @@ try:
       page.evaluate('history.back()')
      assert departure.value.type=='confirm'
      expect(page).to_have_url(BASE+'/jobs/'+cancelled_job)
+     with page.expect_event('dialog') as unload:
+      page.evaluate('setTimeout(()=>location.reload(),0)')
+     assert unload.value.type=='beforeunload'
+     expect(page).to_have_url(BASE+'/jobs/'+cancelled_job)
      page.remove_listener('dialog',reject_departure)
      assert pending_routes, 'Status request must be pending for this readiness regression'
      for held_route in pending_routes: held_route.continue_()
      page.unroute(status_pattern,hold_status)
      page.get_by_role('button',name='Retry original input',exact=True).wait_for()
-     passed('CN-03 actual browser Back is refused while genuine status request is pending; response released unchanged')
+     passed('CN-03 in-app Back and full-document reload are refused while genuine status request is pending; response released unchanged')
 
    # Real personal controls use isolated synthetic accounts, never public profile data.
    page.goto(BASE+'/settings'); page.locator('.pp-profile').wait_for()
