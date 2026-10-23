@@ -45,7 +45,12 @@ const version = {
 };
 function Back() {
   const nav = useNavigate();
-  return <button onClick={() => nav(-1)}>Test browser back</button>;
+  return (
+    <>
+      <button onClick={() => nav(-1)}>Test browser back</button>
+      <button onClick={() => nav(1)}>Test browser forward</button>
+    </>
+  );
 }
 function mount(path = "/create", entries?: string[]) {
   return render(
@@ -474,5 +479,40 @@ describe("unified application integration", () => {
         .getByRole("link", { name: "Version lineage" })
         .getAttribute("href"),
     ).toBe("/worlds/world1?version=v1");
+  });
+  it("world query selection follows browser back and forward without resetting to latest", async () => {
+    localStorage.setItem("eupra.locale", "en-US");
+    const child = {
+      ...version,
+      id: "v2",
+      parent_version_id: "v1",
+      depth: 1,
+      title: "Child node",
+    };
+    call.mockImplementation(async (path: string) => {
+      if (path === "/config") return cfg;
+      if (path === "/auth/me") return { user: { id: "u1" } };
+      if (path === "/story-worlds/world1") return { items: [child, version] };
+      if (path.endsWith("/contributions")) return { record_available: false };
+      throw Error(path);
+    });
+    mount("", ["/worlds/world1?version=v1", "/worlds/world1?version=v2"]);
+    const target = () =>
+      document
+        .querySelector(".world-context a.btn.primary")
+        ?.getAttribute("href");
+    await waitFor(() => expect(target()).toBe("/remix/v2"));
+    fireEvent.click(screen.getByRole("button", { name: "Test browser back" }));
+    await waitFor(() => expect(target()).toBe("/remix/v1"));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Test browser forward" }),
+    );
+    await waitFor(() => expect(target()).toBe("/remix/v2"));
+    fireEvent.click(
+      within(
+        screen.getByRole("group", { name: "Browse story versions" }),
+      ).getAllByRole("button")[0],
+    );
+    await waitFor(() => expect(target()).toBe("/remix/v1"));
   });
 });

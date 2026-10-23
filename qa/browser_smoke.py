@@ -7,7 +7,7 @@ are not mocked. Requires built Rust binary, npm install, Python Playwright/Chrom
 """
 from pathlib import Path
 import os, subprocess, tempfile, time, urllib.request, uuid, json, sys, struct
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 ROOT=Path(__file__).resolve().parents[1]
 ART=ROOT/'qa'/'artifacts'; ART.mkdir(exist_ok=True)
 MODE=sys.argv[1] if len(sys.argv)>1 else 'demo'
@@ -100,7 +100,9 @@ try:
     assert page.locator('.timeline-node').count()==2
     strip=page.get_by_role('group',name='Browse story versions')
     strip.get_by_role('button').first.click()
-    assert page.locator('.world-context').get_by_role('link',name='Push it further',exact=True).get_attribute('href')=='/remix/'+root_id
+    expect(strip.get_by_role('button').first).to_have_attribute('aria-pressed','true')
+    expect(page.locator('.world-context').get_by_role('link',name='Push it further',exact=True)).to_have_attribute('href','/remix/'+root_id)
+    expect(page).to_have_url(BASE+'/worlds/'+world_id+'?version='+root_id)
     passed('CN-10 historical node selection preserves branch target')
     page.goto(BASE+'/share/'+root_id)
     create=page.get_by_role('button',name='Create local preview link')
@@ -156,6 +158,20 @@ try:
       page.screenshot(path=str(ART/filename),full_page=True)
       captures.append({'page':label,'viewport':size,'locale':language,'file':filename})
    passed('all captured personal-core routes render in Chinese and English without horizontal overflow at 1440px and 390px')
+   if MODE=='demo':
+    page.goto(BASE+'/create')
+    page.get_by_role('button',name='文字',exact=True).click()
+    page.get_by_role('textbox',name='文字',exact=True).fill('今天又开了一场本来可以发邮件的会议。')
+    page.get_by_role('button',name='让它发生点什么',exact=True).click()
+    page.wait_for_url('**/result/**',timeout=20000)
+    chinese_id=page.url.rsplit('/',1)[1]
+    chinese=page.request.get(BASE+'/api/v1/versions/'+chinese_id).json()
+    assert chinese['title']=='日常事务正式提出异议' and chinese['demo'] is True and chinese['image_url'] is None
+    page.get_by_text('文字概念演示 · 尚未生成图片',exact=True).first.wait_for()
+    filename='CN-04-Chinese-input-mobile-zh-CN-demo.png'
+    page.screenshot(path=str(ART/filename),full_page=True)
+    captures.append({'page':'CN-04-Chinese-input','viewport':'mobile','locale':'zh-CN','file':filename})
+    passed('Chinese text creation produces correctly localized explicit demo result')
    page.get_by_role('button',name='界面语言',exact=True).click()
    # The example poster is an actual downloadable PNG, with visible design-example labels.
    page.goto(BASE+'/examples/ceo')
