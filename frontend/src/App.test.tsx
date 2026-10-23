@@ -1124,3 +1124,54 @@ it("world lineage selection keeps the persistent direct CTA on the exact ancesto
     ).toBe(true),
   );
 });
+
+it("CN09 persistent continuation uses the selected child, not its source parent", async () => {
+  localStorage.setItem("eupra.locale", "en-US");
+  const child = {
+    ...version,
+    id: "v2",
+    parent_version_id: "v1",
+    depth: 1,
+    title: "Selected child",
+  };
+  call.mockImplementation(async (path) => {
+    if (path === "/config") return { ...cfg, generation_enabled: true };
+    if (path === "/auth/me") return { user: { id: "u1" } };
+    if (path === "/versions/v2") return child;
+    if (path === "/story-worlds/world1") return { items: [version, child] };
+    if (path === "/generation-jobs")
+      return { id: "detail-job", status: "queued" };
+    if (path === "/generation-jobs/detail-job")
+      return { id: "detail-job", status: "cancelled", stage: "CANCELLED" };
+    throw Error(path);
+  });
+  mount("/versions/v2");
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Continue selected version" }),
+  );
+  await waitFor(() =>
+    expect(
+      call.mock.calls.some(
+        ([path, options]) =>
+          path === "/generation-jobs" &&
+          JSON.parse(options!.body as string).parent_version_id === "v2",
+      ),
+    ).toBe(true),
+  );
+});
+it("CN09 persistent continuation remains fail closed when provider is unavailable", async () => {
+  localStorage.setItem("eupra.locale", "en-US");
+  call.mockImplementation(async (path) => {
+    if (path === "/config") return cfg;
+    if (path === "/auth/me") return { user: { id: "u1" } };
+    if (path === "/versions/v1") return version;
+    throw Error(path);
+  });
+  mount("/versions/v1");
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Continue selected version" }),
+  );
+  expect(call.mock.calls.some(([path]) => path === "/generation-jobs")).toBe(
+    false,
+  );
+});

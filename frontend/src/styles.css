@@ -3727,7 +3727,8 @@ footer > a:last-child {
   font: inherit;
   cursor: pointer;
 }
-.world-page:has(.selected-node-dock) {
+.world-page:has(.selected-node-dock),
+.result-page:has(.selected-node-dock) {
   padding-bottom: 140px;
 }
 .selected-node-dock {

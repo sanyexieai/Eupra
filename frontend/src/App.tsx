@@ -1411,6 +1411,35 @@ function Result({ details = false }: { details?: boolean }) {
   }, [v?.id, branchesOpen]);
   if (err) return <Missing />;
   if (!v) return <Loading />;
+  const continueCurrent = async () => {
+    if (continuing || !v.remix_allowed) return;
+    if (!config?.generation_enabled) {
+      setNotice(t("providerOff"));
+      return;
+    }
+    if (!user) {
+      setAuth(true);
+      return;
+    }
+    setContinuing(true);
+    try {
+      const next = await api<Job>("/generation-jobs", {
+        method: "POST",
+        headers: { "Idempotency-Key": crypto.randomUUID() },
+        body: JSON.stringify({
+          kind: "continuation",
+          parent_version_id: v.id,
+          locale: locale === "zh-CN" ? "zh-CN" : "en",
+        }),
+      });
+      sessionStorage.setItem("eupra.job", next.id);
+      navigate("/jobs/" + next.id);
+    } catch (e) {
+      error(e);
+    } finally {
+      setContinuing(false);
+    }
+  };
   return (
     <main className="page result-page">
       <div className="result-top">
@@ -1474,35 +1503,7 @@ function Result({ details = false }: { details?: boolean }) {
           <Btn
             kind="primary wide"
             disabled={continuing || !v.remix_allowed}
-            onClick={async () => {
-              if (continuing) return;
-              if (!config?.generation_enabled) {
-                setNotice(t("providerOff"));
-                return;
-              }
-              if (!user) {
-                setAuth(true);
-                return;
-              }
-              setContinuing(true);
-              try {
-                const next = await api<Job>("/generation-jobs", {
-                  method: "POST",
-                  headers: { "Idempotency-Key": crypto.randomUUID() },
-                  body: JSON.stringify({
-                    kind: "continuation",
-                    parent_version_id: v.id,
-                    locale: locale === "zh-CN" ? "zh-CN" : "en",
-                  }),
-                });
-                sessionStorage.setItem("eupra.job", next.id);
-                navigate("/jobs/" + next.id);
-              } catch (e) {
-                error(e);
-              } finally {
-                setContinuing(false);
-              }
-            }}
+            onClick={continueCurrent}
           >
             <RefreshCw size={19} />
             {t("push")}
@@ -1636,6 +1637,20 @@ function Result({ details = false }: { details?: boolean }) {
           </button>
         </div>
       </div>
+      {details && (
+        <div className="selected-node-dock">
+          <span>
+            {t("selectedVersion")} · {v.title}
+          </span>
+          <Btn
+            kind="primary"
+            disabled={continuing || !v.remix_allowed}
+            onClick={continueCurrent}
+          >
+            {t("continueSelected")}
+          </Btn>
+        </div>
+      )}
     </main>
   );
 }
