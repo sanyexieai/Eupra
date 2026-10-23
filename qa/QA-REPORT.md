@@ -1,5 +1,27 @@
 # QA report — engineering checkpoints
 
+## Latest tested application revision
+
+Exact tested commit: `b611fcaace859484cc57977d795c4d0c78eedf16`.
+Run: https://github.com/sanyexieai/Eupra/actions/runs/39908730333 (success, 2026-10-23 06:02 UTC).
+
+- 19 Rust, 43 component tests, API 5+27 checks, provider/local-share security, 15 original assets and 13 offline evaluation regressions passed.
+- 21 demo + 14 unconfigured real-browser checks passed, with 61 + 28 Chinese/English desktop/mobile-viewport captures. This includes the clarified unavailable production-review state. The Chinese mobile export screenshot was directly inspected and correctly says no moderation task is running.
+- Artifact 12482290600: 42,061,436 bytes; SHA256 `12affa900b95fa67b103f63c6830c7c8435380f5f92b439f1bca03b8c1f9aa43`.
+- The following documentation-only checkpoint does not change application code. Earlier evidence below is retained with its own exact commit; no claim of live-provider or full-MVP acceptance is made.
+
+## Bilingual core acceptance checkpoint
+
+Exact tested commit: `0d235b280650b9f2da7537b639d12444b0e9cd25`.
+Run: https://github.com/sanyexieai/Eupra/actions/runs/39908362744 (success, 2026-10-23 05:58 UTC).
+
+- 19 Rust and 42 component tests; API 5 unavailable + 27 demo checks; provider/local-sharing security; 15 original-asset checks and 13 offline evaluation regressions passed.
+- Genuine Chromium against the Rust API passed 21 demo and 14 unconfigured-service checks. 61 demo and 28 unconfigured captures cover Chinese/English at desktop 1440×1000 and mobile viewport 390×844. These are not physical-device tests.
+- Confirmed exact historical parent/query selection, immutable continuation, safe local demo sharing, Chinese-input template result, actual 1080×1350 official-example PNG, all three actual sample inputs, dismissible sample notification and unobstructed sample/footer hit targets, file-input camera fallback, no horizontal overflow or JavaScript runtime errors.
+- Artifact 12481354728: 42,052,068 bytes, SHA256 `bfa4822f9dba38f458c5ac98993b07660d2b1a464bb3f79dc159411715015dc5`.
+- Production review/publishing copy was clarified afterward in `b611fca`: it explicitly states services are not configured and no moderation job is running. The additional component regression passes locally (43 total); that separate exact-head CI subsequently passed, as recorded above.
+- All demo generations are explicit template text with no fabricated image. Live providers, model quality, independent safety, public sharing, payments and deployment remain unaccepted. See the all-page matrix and visual review for design gaps.
+
 ## First successful CI browser execution
 
 Exact tested commit: `9094403202945e6fb1d1ee577efda46f023640dd`.
@@ -12,13 +34,13 @@ Run: https://github.com/sanyexieai/Eupra/actions/runs/39906250531 (success, 2026
 - No horizontal page overflow or browser JavaScript runtime errors in those checks. This is desktop Chromium with a mobile viewport, not a physical-device or cross-browser pass.
 - Rust 19, component 29, API 5+27, provider/local-sharing security, 15-asset provenance and 13 offline evaluation regression checks also passed in the same CI run.
 - Artifact: https://github.com/sanyexieai/Eupra/actions/runs/39906250531/artifacts/12480398320 . Downloaded archive SHA256 `2e3828272795c0f1199b39735f570c28076df8397c14291fd425544d134fa853` (22,136,579 bytes).
-- Actual pixel inspection found a too-narrow mobile profile identity column and contradictory cancelled-state copy. Sticky creation controls overlapping the sample heading require viewport/scroll qualification, not a claim of unreachable controls. These were not caught by no-overflow assertions; fixes and a new exact-head run are pending. See `VISUAL-REVIEW.md`.
+- Actual pixel inspection found a too-narrow mobile profile identity column and contradictory cancelled-state copy. Sticky creation controls overlapping the sample heading require viewport/scroll qualification, not a claim of unreachable controls. These were not caught by no-overflow assertions; the later bilingual checkpoint above validates the fixes and strict sample/footer hit targets. See `VISUAL-REVIEW.md`.
 
 The first run (`22e09fa`) failed at Rust installer argument parsing before application tests. The toolchain-install command was corrected; no result from that failed run is counted as a pass.
 
 ## Latest local follow-on check (2026-10-23 05:39 UTC)
 
-Frontend production build and 41 component tests pass after graph/attribution, 4:5 export preview and visual fixes. New Chinese+English exact-head browser validation is pending; earlier CI certifies only9094403.
+Frontend production build and 41 component tests pass after graph/attribution, 4:5 export preview and visual fixes. This historical local checkpoint is superseded by the bilingual CI evidence above.
 
 ## Second pass (2026-10-23, before CI)
 
@@ -29,7 +51,7 @@ Frontend production build and 41 component tests pass after graph/attribution, 4
 - Optional staged HTTP engine tested with local mock: stage sequence/request binding, input-safety denial, cancellation and private success. Local mock responses are not evidence of model quality.
 - Local-share security regression passed during independent review: token hashing/expiry/revocation, owner-only review, source/private-memory isolation, authenticated exact-parent continuation, permission/review concurrency, favorites isolation and static traversal/API fallback.
 - Independent staged review fixed candidate/memory size bounds and authoritative retention of the selected current event; regression fixtures cover omitted history and oversized expansion.
-- Browser CI is prepared for the authorized working branch, but no completed runtime browser result is claimed yet.
+- At this historical pre-CI checkpoint no completed runtime browser result existed; subsequent exact-head evidence is recorded above.
 
 ## First checkpoint evidence (retained)
 

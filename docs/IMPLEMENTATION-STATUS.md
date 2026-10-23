@@ -27,7 +27,7 @@ This is a working local product implementation, not full production MVP acceptan
 - No email verification/password recovery, staff moderation interface or comprehensive production abuse defenses.
 - SQLite/in-process queue/private local files remain development choices, not production Postgres/Redis/object storage.
 - No completed model-quality experiment. 56 evaluation cases still require authorized real photos; no human blind review or retention experiment.
-- Local Chromium launch remains blocked, but authorized GitHub CI successfully executed desktop/mobile-viewport Chromium checks on commit `9094403202945e6fb1d1ee577efda46f023640dd`. Later UI changes require their own exact-head run and pixel inspection; current evidence and remaining defects are recorded in `qa/QA-REPORT.md` and `qa/VISUAL-REVIEW.md`. No physical-device, cross-browser or pixel-perfect parity claim.
+- Local Chromium launch remains blocked, but authorized GitHub CI successfully executed desktop/mobile-viewport Chromium checks on commit `0d235b280650b9f2da7537b639d12444b0e9cd25` (bilingual desktop/mobile, run 39908362744). The subsequent production-review copy clarification in `b611fcaace859484cc57977d795c4d0c78eedf16` also passed run 39908730333 (19 Rust, 43 component, 21+14 browser checks); current evidence and remaining defects are recorded in `qa/QA-REPORT.md` and `qa/VISUAL-REVIEW.md`. No physical-device, cross-browser or pixel-perfect parity claim.
 
 ## Repository and test provenance
 
