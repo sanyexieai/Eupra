@@ -1,4 +1,4 @@
-# Implementation status: development checkpoint 0.4
+# Implementation status: development checkpoint 0.5
 
 This is a working local product implementation, not full production MVP acceptance. The original handoff remains the target. See `PAGE-COVERAGE.md` for the independently audited 20-page matrix.
 
@@ -27,7 +27,7 @@ This is a working local product implementation, not full production MVP acceptan
 - No email verification/password recovery, staff moderation interface or comprehensive production abuse defenses.
 - SQLite/in-process queue/private local files remain development choices, not production Postgres/Redis/object storage.
 - No completed model-quality experiment. 56 evaluation cases still require authorized real photos; no human blind review or retention experiment.
-- Local Chromium launch remains blocked. Authorized GitHub CI passed exact commit `aeb203ccd8ae05a06dcb58e6ac7ccdebd3d5e3c8`, run 39916874949: 24 Rust, 69 component and 29+19 real-browser checks, 89 bilingual desktop/mobile-viewport captures. Final chrome refinements are included in that exact tested application revision. No physical-device, cross-browser or pixel-perfect parity claim. See `qa/QA-REPORT.md` and `qa/DESIGN-FIDELITY.md`.
+- Local Chromium launch remains blocked; authorized GitHub CI performed the browser acceptance. Exact tested application `18d03563845ea67f6506c48843baa58db2463a1b`, [run 39924248871](https://github.com/sanyexieai/Eupra/actions/runs/39924248871), succeeded on 2026-10-23 at 08:27 UTC: 28 Rust, 91 component tests/build, API 5 unavailable + 27 demo checks, four security suites, 18-asset provenance and 13 offline evaluation regressions. Real Chromium passed 35 demo + 20 unconfigured-service checks, with 89 standard Chinese/English desktop/mobile-viewport captures and additional intermediate/poster images (103 PNG files total). No physical-device, cross-browser or pixel-perfect parity claim.
 
 ## Repository and test provenance
 
@@ -39,10 +39,10 @@ Private creation drafts now persist full text and private source references with
 
 Frontend adds actual welcome file/camera handoff, saved-draft resume, trash/restore management, confirmed cancellation, honest terminal state, source-preserving retry, current-work video/quota navigation and privacy-preserving unavailable-share messages. These functional loops passed the exact v0.4 browser run above. Original-asset layout is compared page by page in `qa/DESIGN-FIDELITY.md`. Pale route chrome/mobile WEB refinements passed the subsequent exact application CI aeb203, as recorded above.
 
-## Next CN functional increment (local verification, CI pending)
+## CN functional increment (accepted at 18d0356)
 
 Active jobs now guard in-app history/navigation and browser unload; successful jobs wait for deliberate reveal. Results offer a direct exact-parent continuation, real existing-child browsing and return to the selected result. Library query/filter/sort survive reload and include world-name search plus direct graph navigation. Creator overview uses owned account-wide data rather than a fabricated one-world count.
 
 Private profile editing stores bounded nickname/bio and an owner-only normalized avatar. Settings reconcile the account locale and persist explicit changes. Notification preference is storage only, not a subscription. Appeals are actual private local records marked pending_local with staff processing disabled; they never change safety/export. Motion ideas persist separately per owned active version without modifying immutable artwork or spending credits. Balance displays actual disabled-service availability and UTC policy reset metadata, not a promise of future video access.
 
-28 Rust tests, 89 UI tests/build and four independent security suites pass locally. Updated real-browser checks are prepared but have not yet run for this increment. The preceding aeb203 application result does not certify this new code.
+Exact tested application `18d03563845ea67f6506c48843baa58db2463a1b`, [run 39924248871](https://github.com/sanyexieai/Eupra/actions/runs/39924248871), succeeded on 2026-10-23 at 08:27 UTC: 28 Rust, 91 component tests/build, API 5 unavailable + 27 demo checks, four security suites, 18-asset provenance and 13 offline evaluation regressions. Real Chromium passed 35 demo + 20 unconfigured-service checks, with 89 standard Chinese/English desktop/mobile-viewport captures and additional intermediate/poster images (103 PNG files total). The preceding aeb203 result remains historical. See the latest QA report for exact artifact provenance and all six groups.

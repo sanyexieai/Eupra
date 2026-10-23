@@ -1,6 +1,6 @@
 # Original design → implemented page coverage
 
-Implementation audit: v0.5 local functional increment, 2026-10-23 07:43 UTC. This supersedes the earlier v0.4 inventory while preserving its exact-head verification below. Scope is the integrated React/Rust product, not the supplied standalone prototypes. **14 CN/core pages have meaningful partial implementations; all six GLOBAL pages remain intentionally deferred and unimplemented. No page is certified design-complete or production-ready.**
+Implementation audit: v0.5 browser-validated functional increment, 2026-10-23 08:29 UTC. This supersedes the earlier v0.4 inventory while preserving its exact-head verification below. Scope is the integrated React/Rust product, not the supplied standalone prototypes. **14 CN/core pages have meaningful partial implementations; all six GLOBAL pages remain intentionally deferred and unimplemented. No page is certified design-complete or production-ready.**
 
 ## Evidence and interpretation
 
@@ -9,7 +9,7 @@ Compared all 20 `spec/*.md` files in `design/extracted/Eupra发生_MVP1.0/` with
 - **Partial** means real layout or interaction code exists, but required original behavior/structure remains incomplete.
 - **Local gap** means frontend/backend work can continue without choosing a model/payment supplier. Contract and authorization decisions may still be necessary.
 - **External/release dependency** means real generation, independent safety, service/commercial configuration or deployment is required. A missing provider does not block ordinary UI work.
-- Local browser launch remains blocked. The latest accepted application is v0.4 `aeb203ccd8ae05a06dcb58e6ac7ccdebd3d5e3c8`, [run 39916874949](https://github.com/sanyexieai/Eupra/actions/runs/39916874949): 24 Rust, 69 UI and 29 demo + 19 unavailable browser checks, with 89 bilingual desktop/mobile-viewport captures. The new v0.5 functional increment has local tests only and awaits exact-head CI; previous screenshots do not certify its new states.
+- Local browser launch remains blocked; authorized CI provides exact-head evidence. Exact tested application `18d03563845ea67f6506c48843baa58db2463a1b`, [run 39924248871](https://github.com/sanyexieai/Eupra/actions/runs/39924248871), succeeded on 2026-10-23 at 08:27 UTC: 28 Rust, 91 component tests/build, API 5 unavailable + 27 demo checks, four security suites, 18-asset provenance and 13 offline evaluation regressions. Real Chromium passed 35 demo + 20 unconfigured-service checks, with 89 standard Chinese/English desktop/mobile-viewport captures and additional intermediate/poster images (103 PNG files total). New-state pixel review remains separate from functional acceptance.
 
 ## All 20 pages
 
@@ -58,7 +58,7 @@ Remaining independent CN work is concentrated in four groups:
 1. **Presentation/navigation completion:** source/detail/lineage sheets, integrated draft-tab treatment, consistent creator identity, persistent actions and remaining WEB story/source interactions. Physical camera, interruption, browser-history and layout acceptance still matter.
 2. **Share/continuation completeness:** creator attribution and source/your-version comparison, save/re-share, persistent link-list management, explicit capability recovery for shared-parent retry, and bounded guest policy. Preserve private ancestor/source boundaries.
 3. **Local contract/recovery edges:** authorized personal artifact delivery behind fail-closed export permission; dedicated recovery for creator-summary/world-list/world-name/inline-branch reads. These are not blocked by model choice, but must not fabricate authorization or staff processing.
-4. **Exact-head integration/QA:** test the new states in the real browser and compare actual pixels with originals. Keep video generation/accounting, independent safety, production public sharing and commercial operations separate release gates. All six GLOBAL pages stay deferred.
+4. **Further device/layout QA:** exact-head Chromium checks for these six groups now pass. Additional physical-device/cross-browser testing and original-design parity remain. Video generation/accounting, independent safety, production public sharing and commercial operations are separate release gates. All six GLOBAL pages stay deferred.
 
 ## Verification evidence and remaining limits
 
@@ -71,13 +71,13 @@ Remaining independent CN work is concentrated in four groups:
 
 **Accepted final v0.4 refinement:** `aeb203ccd8ae05a06dcb58e6ac7ccdebd3d5e3c8`, [run 39916874949](https://github.com/sanyexieai/Eupra/actions/runs/39916874949), 2026-10-23 07:22 UTC. Passed 24 Rust, 69 UI, API 5+27, provider/local-share/private-asset security, 18-asset provenance and 13 offline regressions; 29 demo + 19 unavailable real-browser checks with 61 + 28 bilingual captures. This includes pale route chrome, website-only footer, settings navigation and mobile WEB ordering, resolving their previous pending labels. Artifact 12485641629 is 48,233,238 bytes, SHA256 `16b2abed3feb01760e2f9705dcaafaa338f29b4a6a8905c9eb4f1d6902a5fa3e`. Actual pixel review is separate in `qa/DESIGN-FIDELITY.md`.
 
-**New v0.5 local-only increment:** backend 28 Rust tests and frontend 89 UI tests/build pass after the CI-found blocker-registration race fix (40 App, 21 Personal and 28 other component tests); Node22 also passed20 repeated focused history/pending-status runs. Active-job Back/Forward, explicit reveal/timeout, exact-parent continuation/children, retained search, account-wide/profile/preference/appeal and motion/reset behavior are source/component-test evidence, not yet an accepted exact-head browser run. This audit reads code/API/QA records; it does not rerun CI or certify new pixels. The v0.4 pass above must not be transferred to v0.5.
+**Accepted v0.5 functional increment:** Exact tested application `18d03563845ea67f6506c48843baa58db2463a1b`, [run 39924248871](https://github.com/sanyexieai/Eupra/actions/runs/39924248871), succeeded on 2026-10-23 at 08:27 UTC: 28 Rust, 91 component tests/build, API 5 unavailable + 27 demo checks, four security suites, 18-asset provenance and 13 offline evaluation regressions. Real Chromium passed 35 demo + 20 unconfigured-service checks, with 89 standard Chinese/English desktop/mobile-viewport captures and additional intermediate/poster images (103 PNG files total). This closes the current six-group browser-validation requirement, not the remaining local/design or external release gaps.
 
 Still outstanding: original-design parity, physical-device/cross-browser and additional viewport testing, fully integrated sheet/navigation behavior, genuine image/video quality and independent safety, authorized personal artifact export, production public sharing, commerce and deployment. GLOBAL is intentionally deferred. The assessment remains 14 partial core pages and six unimplemented GLOBAL pages.
 
 ## Current audit source fingerprints
 
-These SHA256 hashes anchor the frozen local source read for this 08:14 v0.5 inventory, after the navigation readiness fix. They do not replace exact CI commit provenance or establish browser/pixel acceptance. The previous 07:17 fingerprints are superseded for this inventory.
+These SHA256 hashes anchor the frozen local source read for this final 08:31 v0.5 inventory, after the navigation readiness fix. They do not replace exact CI commit provenance or establish browser/pixel acceptance. The previous 07:17 fingerprints are superseded for this inventory.
 
 - frontend/src/App.tsx: `877c00dfbdd30da569d4c5bf43419f4d9cf44350ee78242753e8b8cdab8071b5`
 - frontend/src/main.tsx: `2cc73800cd18ce39e0ba327ddd4e3a1310daf1fe7f3249df39bd0af00837f8bc`
@@ -86,7 +86,7 @@ These SHA256 hashes anchor the frozen local source read for this 08:14 v0.5 inve
 - frontend/src/PersonalPanels.tsx: `c29930addf3e0a487d572e2952dabe0f91499b5861048d7a1327b2c6175ab436`
 - frontend/src/LineageGraph.tsx: `babe41a2996cf0a6cee3a1e4a49d6e4467bb21134cb83e5b8c4718824b6eafa9`
 - frontend/src/ExportPanel.tsx: `0e747ef0f3a8c54df56a01a2a992a3427877ce1556c22691ae7c9efb462e1f72`
-- frontend/src/DraftLibrary.tsx: `d74b55ece4aa5331edb7449ac87e53c969343103a9202b4b58e3b24ed2c6ffed`
+- frontend/src/DraftLibrary.tsx: `9274fba0ad32bcad26f7c510a53bd80e552321dabe69df3eb6abb86e11af4d54`
 - frontend/src/api.ts: `f43002f2f62774046fdc16c636789d466d0fbf074c8a8d204e99b2ab2e886ea3`
 - frontend/src/styles.css: `62fd32f9bb00ba9b54545bbca27270716e532e30790843c134bd4b2c87ff0074`
 - frontend/src/creation-panels.css: `f4b2ff000aa2e2da658511bc4aa593f6cbfa1162ab27c5e1206f865cebb8419f`
@@ -97,4 +97,4 @@ These SHA256 hashes anchor the frozen local source read for this 08:14 v0.5 inve
 - frontend/src/poster.ts: `addaafda5bdabbaf73b7961a9125dafa5283feb7d16f4fe6b7a4c54bc4456caf`
 - backend/API.md: `ea526116f83942ac8f0420db7d83d5ae3393f526b921309de2f0e8e3b76fe865`
 - backend/src/main.rs: `a520b92ec4b5a350b43a89e4349bbf6eab62d9930e41b5aea38cc0683ce437b6`
-- qa/browser_smoke.py: `824966e586fa1d00fe5ce467d0e892e7a72954296c019732bc26ec9544d6b35c`
+- qa/browser_smoke.py: `31fd39169771d88265d2bb9df30238174f483e9f1c89a0b52a0d615227748d7d`

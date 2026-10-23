@@ -1,6 +1,16 @@
 # QA report — engineering checkpoints
 
-## Latest tested application revision: final v0.4 visual refinement
+## Latest tested application revision: v0.5 CN functional loops
+
+Exact tested application `18d03563845ea67f6506c48843baa58db2463a1b`, [run 39924248871](https://github.com/sanyexieai/Eupra/actions/runs/39924248871), succeeded on 2026-10-23 at 08:27 UTC: 28 Rust, 91 component tests/build, API 5 unavailable + 27 demo checks, four security suites, 18-asset provenance and 13 offline evaluation regressions. Real Chromium passed 35 demo + 20 unconfigured-service checks, with 89 standard Chinese/English desktop/mobile-viewport captures and additional intermediate/poster images (103 PNG files total).
+
+- All six added functional groups are now exercised in the actual browser against Rust persistence: job exit protection/deliberate reveal, exact-parent continuation/real child browsing, retained world-aware library filters, account-wide creator/world switching, private profile/avatar/preferences/local appeals, and saved motion ideas with truthful unavailable video quotas.
+- Work/draft recovery and old-link revocation were rerun. A genuine stale-list action race on library tab changes was fixed by resource-keyed data, with commit-level and late-response component regressions. Browser checks retain exact row counts and do not replace server responses.
+- Artifact 12488862476 is 50,745,674 bytes; downloaded SHA256 verified as `39f7bf84b79649861becaeb18b6364d858c67916edace52532cf7851820ea533`. 89 is the standard route-capture count, not all PNG files. Intermediate screenshots cover ready-to-reveal, expanded children, profile editor/saved profile, saved motion and private creator/world chooser.
+- This is local-development acceptance, not full design/production acceptance. Live model quality, independent safety, public sharing/personal export, real video/accounting, production operations and six GLOBAL pages remain unaccepted. Pixel review and all-page remaining deltas are separate in `DESIGN-FIDELITY.md` and `docs/PAGE-COVERAGE.md`.
+- Documentation recorded after this run does not alter the tested application files. Future application changes require new acceptance.
+
+## Previous tested application revision: final v0.4 visual refinement
 
 Exact tested application commit: `aeb203ccd8ae05a06dcb58e6ac7ccdebd3d5e3c8`.
 Run: https://github.com/sanyexieai/Eupra/actions/runs/39916874949 (success, 2026-10-23 07:22 UTC).
@@ -115,7 +125,7 @@ Date: 2026-10-23 UTC. Scope: local development implementation. No live model, pu
 
 Do not run test-account-creating scripts against production databases. Do not infer full MVP acceptance from this checkpoint.
 
-## Subsequent CN functional increment: local only
+## Historical pre-CI v0.5 local verification
 
 28 Rust and 89 component tests/build pass. Provider, local-share, private-asset and new personal-control security scripts pass against isolated local databases. New checks cover profile/avatar ownership and malformed fields, safe account aggregates, immutable motion preferences, deleted-work denial, bounded private pending_local appeals, settings isolation and truthful disabled quota policy metadata. Browser harness now checks deliberate reveal, direct continuation, child navigation, query/filter/world search persistence, private profile/avatar, local appeal records and saved motion ideas. No runtime browser pass is claimed yet for this increment.
 
@@ -126,3 +136,5 @@ Run 39919977254 at `92264dd71ffaf360fae6a2adef3250aeaa26af1b` passed 28 Rust tes
 Guard fix verification: official Node 22.23.4 passed 20 repeated focused history/pending-status test runs, all 89 UI tests and TypeScript/Vite build. No navigation assertion was removed or relaxed and no arbitrary delay was added. Exact new-head CI remains required.
 
 Following browser runs verified direct continuation, branch return, retained world search, real Back/reload protection and private profile/avatar preferences. They exposed harness distinctions between asynchronous filter navigation and full-document versus SPA history, and an appeal select missing an explicit exact accessible label. The label binding and regression were fixed. New intermediate-state screenshots are included in the next run; no overall v0.5 browser pass is claimed until both modes complete.
+
+The later successful 18d0356 run above supersedes these pending v0.5 statuses; failed intermediate runs remain failures.
