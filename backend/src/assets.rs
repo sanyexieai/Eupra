@@ -133,7 +133,11 @@ pub async fn export_permission(
         json!({"allowed":false,"reason":"REVIEW_NOT_CONFIGURED","safety_state":"HOLD","scope":"none"}),
     ))
 }
-fn validate_draft(db: &Connection, uid: &str, v: &Value) -> R<()> {
+fn validate_draft(db: &Connection, uid: &str, v: &mut Value) -> R<()> {
+    // UI uses a regional English locale; store the canonical engine/settings locale.
+    if field(v, "locale") == "en-US" {
+        v["locale"] = json!("en");
+    }
     for (key, max) in [("title", 120), ("text", 2000)] {
         if !v[key].is_string() || field(v, key).chars().count() > max {
             return Err(err(
@@ -248,7 +252,7 @@ pub async fn create_draft(
     let key = id();
     let created = now();
     let db = a.db.lock().unwrap();
-    validate_draft(&db, &uid, &data)?;
+    validate_draft(&db, &uid, &mut data)?;
     let count: i64 = db.query_row(
         "SELECT count(*) FROM drafts WHERE user_id=? AND deleted_at IS NULL",
         [&uid],
@@ -344,7 +348,7 @@ pub async fn patch_draft(
             data[k] = value.clone()
         }
     }
-    validate_draft(&tx, &uid, &data)?;
+    validate_draft(&tx, &uid, &mut data)?;
     let updated = now();
     tx.execute(
         "UPDATE drafts SET data=?,revision=revision+1,updated_at=? WHERE id=?",
@@ -433,6 +437,61 @@ mod tests {
         )
         .await;
         j["version_id"].as_str().unwrap().into()
+    }
+    #[tokio::test]
+    async fn draft_http_regional_english_normalizes_on_create_and_revision_patch() {
+        let app = routes(init(Connection::open_in_memory().unwrap(), true));
+        let cookie = account(&app, "locale-draft@local.test").await;
+        let (status, draft, _) = request(
+            &app,
+            "POST",
+            "/api/v1/me/drafts",
+            &cookie,
+            json!({"text":"English idea", "locale":"en-US"}),
+            "",
+        )
+        .await;
+        assert_eq!(status, 200);
+        assert_eq!(draft["locale"], "en");
+        assert_eq!(draft["revision"], 1);
+        let path = format!("/api/v1/drafts/{}", draft["id"].as_str().unwrap());
+        let (status, updated, _) = request(
+            &app,
+            "PATCH",
+            &path,
+            &cookie,
+            json!({"expected_revision":1,"locale":"en-US","text":"Revised English idea"}),
+            "",
+        )
+        .await;
+        assert_eq!(status, 200);
+        assert_eq!(updated["locale"], "en");
+        assert_eq!(updated["revision"], 2);
+        let (status, stored, _) = request(&app, "GET", &path, &cookie, Value::Null, "").await;
+        assert_eq!(status, 200);
+        assert_eq!(stored["locale"], "en");
+        assert_eq!(stored["text"], "Revised English idea");
+        assert_eq!(stored["revision"], 2);
+        let (status, _, _) = request(
+            &app,
+            "PATCH",
+            &path,
+            &cookie,
+            json!({"expected_revision":1,"locale":"en-US"}),
+            "",
+        )
+        .await;
+        assert_eq!(status, 409);
+        let (status, _, _) = request(
+            &app,
+            "PATCH",
+            &path,
+            &cookie,
+            json!({"expected_revision":2,"locale":"unsupported"}),
+            "",
+        )
+        .await;
+        assert_eq!(status, 400);
     }
     #[tokio::test]
     async fn private_drafts_revision_source_and_recovery() {

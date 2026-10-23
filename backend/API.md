@@ -57,7 +57,7 @@ Frontend should map stages to localized descriptions and use indeterminate progr
 
 ## Private creation drafts
 GET /me/drafts?state=active|trash|all returns {items:[draft]}, default active.
-POST /me/drafts {title?,text?,source_id?,parent_version_id?,locale?} returns a direct draft DTO. Defaults: empty title/text, null references, zh-CN. Title <=120 characters; text <=2000; sources and parents must be owned, parent must not be trashed. Empty drafts are permitted. Maximum 200 active drafts per user.
+POST /me/drafts {title?,text?,source_id?,parent_version_id?,locale?} returns a direct draft DTO. Defaults: empty title/text, null references, zh-CN. Draft create and PATCH accept locales zh-CN, en, and the UI alias en-US; en-US is normalized and persisted/returned as en, the canonical generation/settings locale. Title <=120 characters; text <=2000; sources and parents must be owned, parent must not be trashed. Empty drafts are permitted. Maximum 200 active drafts per user.
 Draft DTO: {id,title,text,source_id,source_url,locale,parent_version_id,revision,created_at,updated_at,deleted_at}. Text is full original input; source_url is owner-only private upload. No capability tokens are stored in drafts. Shared-parent drafts are not supported; use the authorized shared continuation flow instead.
 GET /drafts/{id} returns an active owned draft, otherwise 404.
 PATCH /drafts/{id} accepts changed draft fields plus mandatory expected_revision. Returns updated draft; stale revision ->409 REVISION_CONFLICT; omitted revision ->400 REVISION_REQUIRED. Immutable id/owner/timestamps cannot be supplied.
