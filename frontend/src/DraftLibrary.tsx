@@ -44,12 +44,21 @@ type Item = {
 export function DraftLibrary({
   app,
   onWorksChanged,
+  embedded = false,
+  query = "",
+  sort = "newest",
+  onDraftsChanged,
 }: {
   app: App;
   onWorksChanged?: () => void;
+  embedded?: boolean;
+  query?: string;
+  sort?: string;
+  onDraftsChanged?: () => void;
 }) {
   const t = (key: keyof typeof zh) => (app.locale === "zh-CN" ? zh : en)[key];
-  const [open, setOpen] = useState(false);
+  const [expanded, setOpen] = useState(false);
+  const open = embedded || expanded;
   const [tab, setTab] = useState<"drafts" | "trash" | "manage">("drafts");
   const [data, setData] = useState<{
     key: string;
@@ -71,6 +80,16 @@ export function DraftLibrary({
   ]);
   const items = data?.key === resourceKey ? data.items : null;
   const failed = data?.key === resourceKey && data.failed;
+  const visibleItems = items
+    ?.filter((item) =>
+      (item.title + " " + item.caption)
+        .toLowerCase()
+        .includes(query.toLowerCase()),
+    )
+    .sort(
+      (a, b) =>
+        (Number(b.date) - Number(a.date)) * (sort === "oldest" ? -1 : 1),
+    );
 
   useEffect(() => {
     let active = true;
@@ -144,6 +163,7 @@ export function DraftLibrary({
       setConfirm(null);
       app.setNotice(t("saved"));
       if (item.kind === "work") onWorksChanged?.();
+      else onDraftsChanged?.();
     } catch {
       setMutationError(true);
       app.setNotice(t("failed"));
@@ -153,18 +173,20 @@ export function DraftLibrary({
   };
   return (
     <section className="dl-library">
-      <button
-        className="dl-heading"
-        aria-expanded={open}
-        onClick={() => setOpen(!open)}
-      >
-        <FolderOpen size={21} />
-        <span>
-          <strong>{t("title")}</strong>
-          <small>{t("intro")}</small>
-        </span>
-        <ChevronDown className={open ? "open" : ""} size={19} />
-      </button>
+      {!embedded && (
+        <button
+          className="dl-heading"
+          aria-expanded={open}
+          onClick={() => setOpen(!open)}
+        >
+          <FolderOpen size={21} />
+          <span>
+            <strong>{t("title")}</strong>
+            <small>{t("intro")}</small>
+          </span>
+          <ChevronDown className={open ? "open" : ""} size={19} />
+        </button>
+      )}
       {open && (
         <div className="dl-body">
           {!app.user ? (
@@ -174,27 +196,29 @@ export function DraftLibrary({
             </button>
           ) : (
             <>
-              <div className="dl-tabs" role="group" aria-label={t("title")}>
-                {(["drafts", "trash", "manage"] as const).map((key) => (
+              {!embedded && (
+                <div className="dl-tabs" role="group" aria-label={t("title")}>
+                  {(["drafts", "trash", "manage"] as const).map((key) => (
+                    <button
+                      key={key}
+                      disabled={busy}
+                      aria-pressed={tab === key}
+                      className={tab === key ? "active" : ""}
+                      onClick={() => setTab(key)}
+                    >
+                      {t(key)}
+                    </button>
+                  ))}
                   <button
-                    key={key}
                     disabled={busy}
-                    aria-pressed={tab === key}
-                    className={tab === key ? "active" : ""}
-                    onClick={() => setTab(key)}
+                    className="dl-refresh"
+                    aria-label={t("refresh")}
+                    onClick={() => setRefresh((v) => v + 1)}
                   >
-                    {t(key)}
+                    <RefreshCw size={16} />
                   </button>
-                ))}
-                <button
-                  disabled={busy}
-                  className="dl-refresh"
-                  aria-label={t("refresh")}
-                  onClick={() => setRefresh((v) => v + 1)}
-                >
-                  <RefreshCw size={16} />
-                </button>
-              </div>
+                </div>
+              )}
               {failed ? (
                 <div className="dl-empty" role="alert">
                   <p>{t("error")}</p>
@@ -206,17 +230,19 @@ export function DraftLibrary({
                 <p className="dl-loading" role="status">
                   {t("loading")}
                 </p>
-              ) : !items.length ? (
+              ) : !visibleItems?.length ? (
                 <div className="dl-empty">
                   <FileText size={28} />
                   <p>
-                    {t(
-                      tab === "drafts"
-                        ? "emptyDrafts"
-                        : tab === "trash"
-                          ? "emptyTrash"
-                          : "emptyWorks",
-                    )}
+                    {query
+                      ? t("noMatches")
+                      : t(
+                          tab === "drafts"
+                            ? "emptyDrafts"
+                            : tab === "trash"
+                              ? "emptyTrash"
+                              : "emptyWorks",
+                        )}
                   </p>
                   {tab === "drafts" && (
                     <Link to="/create">
@@ -227,7 +253,7 @@ export function DraftLibrary({
                 </div>
               ) : (
                 <div className="dl-items">
-                  {items.map((item) => (
+                  {visibleItems!.map((item) => (
                     <article className="dl-item" key={item.kind + item.id}>
                       <div className="dl-item-top">
                         <div className="dl-thumb">

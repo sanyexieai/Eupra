@@ -436,12 +436,17 @@ describe("unified application integration", () => {
         return { ...cfg, generation_enabled: true, provider: "http" };
       if (path === "/auth/me") return { user: { id: "u1" } };
       if (path === "/me/works") return { items: [live] };
+      if (path === "/me/drafts") return { items: [] };
       if (path === "/story-worlds/world1") return { items: [live] };
       throw Error(path);
     });
     const view = mount("/works");
     await screen.findByRole("searchbox");
-    expect(screen.queryByRole("button", { name: "Drafts" })).toBeNull();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Drafts" }).textContent).toBe(
+        "Drafts 0",
+      ),
+    );
     view.unmount();
     mount("/worlds/world1");
     await screen.findByText("Text concept · No image");
@@ -830,6 +835,9 @@ describe("unified application integration", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Originals" }));
     fireEvent.click(document.querySelector(".work-card .work-image")!);
+    fireEvent.click(
+      await screen.findByRole("link", { name: "Open full work details" }),
+    );
     await screen.findByRole("button", { name: "Push it further" });
     fireEvent.click(screen.getByRole("button", { name: "Test browser back" }));
     await waitFor(() =>
@@ -1028,4 +1036,91 @@ describe("unified application integration", () => {
     expect(confirm).not.toHaveBeenCalled();
     confirm.mockRestore();
   });
+});
+
+it("opens exact source even for text-only result and closes without changing version", async () => {
+  localStorage.setItem("eupra.locale", "en-US");
+  call.mockImplementation(async (path: string) => {
+    if (path === "/config") return cfg;
+    if (path === "/auth/me")
+      return { user: { id: "u1", email: "test@example.com" } };
+    if (path === "/versions/v1") return version;
+    if (path === "/versions/v1/source")
+      return { text: "Unabridged original thought", source_url: null };
+    throw Error(path);
+  });
+  mount("/result/v1");
+  fireEvent.click(
+    await screen.findByRole("button", { name: "View actual source" }),
+  );
+  expect(await screen.findByText("Unabridged original thought")).toBeTruthy();
+  fireEvent.click(
+    within(screen.getByRole("dialog")).getByRole("button", { name: "Close" }),
+  );
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.getByRole("heading", { name: version.title })).toBeTruthy();
+});
+it("cycles official WEB examples without generating a job", async () => {
+  localStorage.setItem("eupra.locale", "en-US");
+  mount("/");
+  fireEvent.click(screen.getByRole("button", { name: "Next example" }));
+  const dialog = screen.getByRole("dialog");
+  expect(within(dialog).getByRole("img").getAttribute("src")).toContain(
+    "cat-moon",
+  );
+  fireEvent.click(within(dialog).getByRole("button", { name: "Next example" }));
+  expect(within(dialog).getByRole("img").getAttribute("src")).toContain(
+    "shiba-agent",
+  );
+  fireEvent.click(
+    within(dialog).getByRole("button", { name: "Example source" }),
+  );
+  expect(within(dialog).getByRole("img").getAttribute("src")).toContain(
+    "demo-source",
+  );
+  expect(call.mock.calls.some(([path]) => path === "/generation-jobs")).toBe(
+    false,
+  );
+});
+it("world lineage selection keeps the persistent direct CTA on the exact ancestor", async () => {
+  localStorage.setItem("eupra.locale", "en-US");
+  const child = {
+    ...version,
+    id: "v2",
+    parent_version_id: "v1",
+    depth: 1,
+    title: "Child title",
+  };
+  call.mockImplementation(async (path, options) => {
+    if (path === "/config")
+      return { ...cfg, generation_enabled: true, demo: true };
+    if (path === "/auth/me") return { user: { id: "u1" } };
+    if (path === "/story-worlds/world1") return { items: [version, child] };
+    if (path === "/generation-jobs") return { id: "new-job", status: "queued" };
+    if (path === "/generation-jobs/new-job")
+      return { id: "new-job", status: "cancelled", stage: "CANCELLED" };
+    throw Error(path);
+  });
+  mount("/worlds/world1?version=v2");
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Creator lineage" }),
+  );
+  fireEvent.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: version.title,
+    }),
+  );
+  expect(screen.queryByRole("dialog")).toBeNull();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Continue selected version" }),
+  );
+  await waitFor(() =>
+    expect(
+      call.mock.calls.some(
+        ([path, options]) =>
+          path === "/generation-jobs" &&
+          JSON.parse(options!.body as string).parent_version_id === "v1",
+      ),
+    ).toBe(true),
+  );
 });

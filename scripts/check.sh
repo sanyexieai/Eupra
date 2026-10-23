@@ -28,6 +28,7 @@ python3 qa/provider_security.py
 python3 qa/local_share_security.py
 python3 qa/private_assets_security.py
 python3 qa/personal_security.py
+python3 qa/source_security.py
 python3 qa/verify_assets.py
 python3 qa/engine_eval/validate.py
 python3 -m unittest discover -s qa/engine_eval -p 'test_*.py'

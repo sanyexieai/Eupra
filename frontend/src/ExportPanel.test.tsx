@@ -208,3 +208,13 @@ describe("share and export permission states", () => {
     ).toBe(true);
   });
 });
+
+it("offers truthful manual platform guidance without sending or enabling blocked output", async () => {
+  mount();
+  fireEvent.click(screen.getByText(copy.platformGuide));
+  expect(screen.getByText(copy.platformBlocked)).toBeTruthy();
+  expect(screen.getByText(copy.platformLocal)).toBeTruthy();
+  expect(screen.getByText(copy.platformWechat)).toBeTruthy();
+  expect(navigator.share).not.toHaveBeenCalled();
+  expect(post).not.toHaveBeenCalled();
+});

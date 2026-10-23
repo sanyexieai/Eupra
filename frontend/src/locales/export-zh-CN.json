@@ -36,5 +36,13 @@
   "shareDisabledTitle": "此环境暂不支持预览链接",
   "shareDisabledBody": "当前服务未开放此类预览。原作品仍保持私密。",
   "retry": "重新读取",
-  "create": "开始自己的创作"
+  "create": "开始自己的创作",
+  "platformGuide": "分享到其他应用",
+  "platformIntro": "尚未接入平台 SDK。打开系统分享面板不代表已经发布成功。",
+  "platformWechat": "微信／朋友圈",
+  "platformXhs": "小红书",
+  "platformDouyin": "抖音",
+  "platformSteps": "获得可导出的已审核海报后，先保存图片，再自行打开目标应用，选择已保存的图片，确认文案与可见范围后在该应用内发布。",
+  "platformBlocked": "当前个人海报尚未获准导出，暂时没有可保存或上传的图片。需先接入独立输出审核与导出服务。",
+  "platformLocal": "本机预览链接仅用于当前机器上的开发验证，不是可供外部平台访问的公开链接。"
 }

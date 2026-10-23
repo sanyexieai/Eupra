@@ -1,0 +1,19 @@
+{
+  "loading": "Loading this version…",
+  "compareTitle": "One original. Your next version.",
+  "compareNote": "Compare only the shared work and your own completed continuation. Private source material is never included.",
+  "original": "Shared original",
+  "yours": "Your version",
+  "versionId": "Work ID",
+  "creatorId": "Creator ID",
+  "parentId": "Continued from",
+  "viewChild": "View your result",
+  "saveShare": "Save or share your version",
+  "exportNote": "Opens this work’s export permissions. A saved result does not mean public sharing or PNG export is approved.",
+  "loginNote": "Sign in to create or view your own continuation.",
+  "noChild": "Your completed continuation will appear here. No version has been generated for you yet.",
+  "loadFailed": "Your versions could not be loaded. The shared work has not changed.",
+  "chooseChild": "Choose your completed version",
+  "reload": "Reload your versions",
+  "resumeTask": "Return to creation or resume your last task"
+}

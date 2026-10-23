@@ -138,3 +138,11 @@ Guard fix verification: official Node 22.23.4 passed 20 repeated focused history
 Following browser runs verified direct continuation, branch return, retained world search, real Back/reload protection and private profile/avatar preferences. They exposed harness distinctions between asynchronous filter navigation and full-document versus SPA history, and an appeal select missing an explicit exact accessible label. The label binding and regression were fixed. New intermediate-state screenshots are included in the next run; no overall v0.5 browser pass is claimed until both modes complete.
 
 The later successful 18d0356 run above supersedes these pending v0.5 statuses; failed intermediate runs remain failures.
+
+## Pending v0.6 original-design interaction increment
+
+The finite checklist in `docs/CN-NEXT-ACCEPTANCE.md` governs exactly eight additional original-backed behaviors: actual source sheet, primary drafts tab, work drawer, selected-node growth/lineage actions, original example navigation, actual own-child comparison/save-share handoff, truthful platform guidance and valid-capability retry recovery. Source and component changes are implemented; exact-head browser acceptance is still pending.
+
+Local checks pass: 30 Rust tests; 112 component tests and production build; API 5+27; provider/local-share/private-assets/personal/source security scripts; 18 asset manifest checks; 13 offline evaluation tests. Private source retrieval returns only this version’s exact submitted input, never ancestors’ inputs. Capability recovery is held only in this tab’s memory, binds the server-provided parent, and clears on account change. Reopening a valid preview can restore that bounded context after refresh. No personal export/public-profile/guest generation authorization has been added.
+
+The accepted v0.5 result above remains historical and must not be transferred to these changes before a successful new run. No new artwork or fake generated output is used.

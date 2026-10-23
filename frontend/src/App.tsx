@@ -1,3 +1,12 @@
+import { WorksPanel } from "./WorksPanel";
+import { SharedPreview } from "./SharedPreview";
+import { SourceSheet, LineageSheet, VersionSheet } from "./VersionSheets";
+import {
+  rememberSharedJob,
+  sharedJobRetryBody,
+  inheritSharedJob,
+  clearSharedJobs,
+} from "./sharedJobCapability";
 import { DraftLibrary } from "./DraftLibrary";
 import { ExportPanel, ShareUnavailable } from "./ExportPanel";
 import {
@@ -126,6 +135,7 @@ export default function App() {
   );
   const [config, setConfig] = useState<Config | null>(null);
   const [user, setUser] = useState<any>(null);
+  useEffect(() => clearSharedJobs(), [user?.id]);
   const [auth, setAuth] = useState(false);
   const [notice, setNotice] = useState("");
   const [offline, setOffline] = useState(false);
@@ -483,6 +493,15 @@ function MobileNav() {
 }
 function Landing() {
   const { t, locale } = useApp();
+  const [exampleStage, setExampleStage] = useState(1);
+  const [exampleOpen, setExampleOpen] = useState(false);
+  const exampleImages = [
+    "demo-source.webp",
+    "cat-ceo-hero.webp",
+    "cat-moon-hero.webp",
+    "shiba-agent.webp",
+  ];
+  const exampleTitles = ["exampleSource", "ceo", "moon", "shibaExample"];
   const video = useRef<HTMLVideoElement>(null);
   const [videoFailed, setVideoFailed] = useState(false);
   const videoBase =
@@ -557,7 +576,14 @@ function Landing() {
               ["cat-ceo-hero.webp", "version1", "ceo", "ceo"],
               ["cat-moon-hero.webp", "version2", "moon", "moon"],
             ].map(([img, label, title, id], i) => (
-              <Link className="story-card" to={"/examples/" + id} key={img}>
+              <button
+                className="story-card"
+                onClick={() => {
+                  setExampleStage(i);
+                  setExampleOpen(true);
+                }}
+                key={img}
+              >
                 <img src={asset(img)} alt={t(title)} />
                 <div className="card-top">
                   <span>
@@ -569,9 +595,53 @@ function Landing() {
                   <small>{t("example")}</small>
                   <h3>{t(title)}</h3>
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
+          <Btn
+            onClick={() => {
+              setExampleStage((x) => (x + 1) % exampleImages.length);
+              setExampleOpen(true);
+            }}
+          >
+            {t("nextExample")}
+            <ArrowRight size={18} />
+          </Btn>
+          {exampleOpen && (
+            <VersionSheet
+              closeLabel={locale === "zh-CN" ? "关闭" : "Close"}
+              title={t("example")}
+              close={() => setExampleOpen(false)}
+            >
+              <p className="fineprint">{t("exampleNote")}</p>
+              <img
+                className="source-sheet-image"
+                src={asset(exampleImages[exampleStage])}
+                alt={t(exampleTitles[exampleStage])}
+              />
+              <h3>{t(exampleTitles[exampleStage])}</h3>
+              <div className="example-stage-controls">
+                {exampleTitles.map((title, i) => (
+                  <button
+                    key={title}
+                    className="btn"
+                    aria-pressed={exampleStage === i}
+                    onClick={() => setExampleStage(i)}
+                  >
+                    {t(title)}
+                  </button>
+                ))}
+                <button
+                  className="btn primary"
+                  onClick={() =>
+                    setExampleStage((x) => (x + 1) % exampleImages.length)
+                  }
+                >
+                  {t("nextExample")}
+                </button>
+              </div>
+            </VersionSheet>
+          )}
           <p className="fineprint">{t("exampleNote")}</p>
         </section>
         <section id="how" className="landing-how">
@@ -1282,9 +1352,15 @@ function JobPage() {
                   {
                     method: "POST",
                     headers: { "Idempotency-Key": crypto.randomUUID() },
-                    body: JSON.stringify({}),
+                    body: JSON.stringify(
+                      sharedJobRetryBody(
+                        job.id,
+                        job.input_summary?.parent_version_id,
+                      ),
+                    ),
                   },
                 );
+                inheritSharedJob(job.id, next.id);
                 sessionStorage.setItem("eupra.job", next.id);
                 setJob(null);
                 navigate("/jobs/" + next.id);
@@ -1383,23 +1459,17 @@ function Result({ details = false }: { details?: boolean }) {
             {t("welcome")}
           </p>
           <p className="caption">{v.caption}</p>
-          {v.source_id && (
-            <>
-              <button
-                className="text-button"
-                onClick={() => setShowSource(!showSource)}
-              >
-                <ImageIcon size={15} />
-                {t("sourcePrivate")}
-              </button>
-              {showSource && (
-                <img
-                  className="private-source"
-                  src={"/api/v1/uploads/" + v.source_id}
-                  alt={t("sourcePrivate")}
-                />
-              )}
-            </>
+          <button className="text-button" onClick={() => setShowSource(true)}>
+            <ImageIcon size={15} />
+            {t("viewActualSource")}
+          </button>
+          {showSource && (
+            <SourceSheet
+              key={v.id}
+              versionId={v.id}
+              locale={locale}
+              close={() => setShowSource(false)}
+            />
           )}
           <Btn
             kind="primary wide"
@@ -1578,100 +1648,16 @@ function SharePage() {
 }
 function PublicShare() {
   const { token } = useParams();
-  const { t, user, setAuth, locale, navigate, error } = useApp();
-  const [data, setData] = useState<any>(null);
-  const [failed, setFailed] = useState(false);
-  const [errorCode, setErrorCode] = useState<string | undefined>();
-  const [retry, setRetry] = useState(0);
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    setData(null);
-    setFailed(false);
-    setErrorCode(undefined);
-    let active = true;
-    api("/share/" + token)
-      .then((value) => {
-        if (active) setData(value);
-      })
-      .catch((e) => {
-        if (active) {
-          setFailed(true);
-          setErrorCode(e?.code);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, [token, retry]);
-  if (failed)
-    return (
-      <ShareUnavailable
-        locale={locale}
-        errorCode={errorCode}
-        onRetry={() => setRetry((v) => v + 1)}
-      />
-    );
-  if (!data) return <Loading />;
-  const v = data.version || data;
   return (
-    <main className="page narrow public-share">
-      <p className="eyebrow">
-        <GitBranch size={17} />
-        {t("localPreview")}
-      </p>
-      <VersionVisual t={t} v={v} large />
-      <section className="public-participation">
-        <p className="inline-note">{t("localPreviewNote")}</p>
-        <Btn
-          kind="primary wide"
-          disabled={busy || !v.remix_allowed}
-          onClick={async () => {
-            if (!user) {
-              setAuth(true);
-              return;
-            }
-            if (busy) return;
-            setBusy(true);
-            try {
-              const j = await api<Job>("/generation-jobs", {
-                method: "POST",
-                headers: { "Idempotency-Key": crypto.randomUUID() },
-                body: JSON.stringify({
-                  kind: "continuation",
-                  parent_version_id: v.id,
-                  share_token: token,
-                  locale: locale === "zh-CN" ? "zh-CN" : "en",
-                }),
-              });
-              sessionStorage.setItem("eupra.job", j.id);
-              navigate("/jobs/" + j.id);
-            } catch (e) {
-              error(e);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          <Sparkles size={19} />
-          {t("push")}
-          <ArrowRight size={20} />
-        </Btn>
-        <p className="fineprint">
-          {t(
-            !v.remix_allowed
-              ? "remixDisabled"
-              : user
-                ? "accurateParent"
-                : "authNeeded",
-          )}
-        </p>
-      </section>
-    </main>
+    <SharedPreview
+      app={useApp()}
+      token={token || ""}
+      onSharedJob={rememberSharedJob}
+    />
   );
 }
 function SettingsPage() {
-  const app = useApp();
-  return <ProfileSettings app={app} />;
+  return <ProfileSettings app={useApp()} />;
 }
 function VideoPage() {
   const app = useApp();
@@ -1681,8 +1667,7 @@ function VideoPage() {
   return <VideoStudio app={app} version={v} />;
 }
 function Balance() {
-  const app = useApp();
-  return <VideoBalance app={app} />;
+  return <VideoBalance app={useApp()} />;
 }
 function Example() {
   const { id } = useParams();
@@ -1871,258 +1856,7 @@ function Welcome() {
   );
 }
 function Works() {
-  const app = useApp();
-  const { t, user, setAuth, error } = app;
-  const [refresh, setRefresh] = useState(0);
-  const [works, setWorks] = useState<Version[] | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [params, setParams] = useSearchParams();
-  const savedParams = new URLSearchParams(
-    sessionStorage.getItem("eupra.works.filters") || "",
-  );
-  const query = params.get("q") ?? savedParams.get("q") ?? "";
-  const rawFilter = params.get("filter") ?? savedParams.get("filter") ?? "all";
-  const filter = ["all", "originals", "remixes", "favorites"].includes(
-    rawFilter,
-  )
-    ? rawFilter
-    : "all";
-  const sort =
-    (params.get("sort") ?? savedParams.get("sort")) === "oldest"
-      ? "oldest"
-      : "newest";
-  const changeFilters = (key: string, value: string) => {
-    const next = new URLSearchParams({ q: query, filter, sort });
-    next.set(key, value);
-    sessionStorage.setItem("eupra.works.filters", next.toString());
-    setParams(next, { replace: true });
-  };
-  const setQuery = (value: string) => changeFilters("q", value);
-  const setFilter = (value: string) => changeFilters("filter", value);
-  const setSort = (value: string) => changeFilters("sort", value);
-  const [worlds, setWorlds] = useState<{ id: string; title: string }[]>([]);
-  useEffect(() => {
-    if (user)
-      api("/me/story-worlds")
-        .then((r) => setWorlds(r.items || []))
-        .catch(() => setWorlds([]));
-  }, [user, refresh]);
-  useEffect(() => {
-    if (user)
-      api("/me/works")
-        .then((r) => setWorks(r.items))
-        .catch(() => setFailed(true));
-  }, [user, refresh]);
-  const all = works || [];
-  const roots = all.filter((v) => !v.parent_version_id);
-  const filtered = all
-    .filter(
-      (v) =>
-        (
-          v.title +
-          " " +
-          v.caption +
-          " " +
-          (worlds.find((w) => w.id === v.story_world_id)?.title || "")
-        )
-          .toLowerCase()
-          .includes(query.toLowerCase()) &&
-        (filter === "all" ||
-          (filter === "originals" && !v.parent_version_id) ||
-          (filter === "remixes" && !!v.parent_version_id) ||
-          (filter === "favorites" && v.favorite)),
-    )
-    .sort((a, b) => {
-      const time = (v: Version) =>
-        typeof v.created_at === "number"
-          ? v.created_at * 1000
-          : new Date(v.created_at).getTime();
-      return (time(b) - time(a)) * (sort === "newest" ? 1 : -1);
-    });
-  const featured = all[0];
-  return (
-    <main className="page">
-      <PageTitle title="yourUniverse" desc="mySubtitle" eyebrow="navWorks" />
-      <DraftLibrary app={app} onWorksChanged={() => setRefresh((v) => v + 1)} />
-      {!user ? (
-        <div className="empty">
-          <FolderHeart />
-          <h2>{t("authNeeded")}</h2>
-          <Btn kind="primary" onClick={() => setAuth(true)}>
-            {t("login")}
-            <ArrowRight size={18} />
-          </Btn>
-        </div>
-      ) : !works && !failed ? (
-        <Loading />
-      ) : !all.length ? (
-        <div className="empty">
-          <Sparkles />
-          <h2>{t(failed ? "offline" : "empty")}</h2>
-          <p>{t("emptyBody")}</p>
-          <Link className="btn primary" to="/create">
-            {t("happen")}
-            <ArrowRight size={18} />
-          </Link>
-        </div>
-      ) : (
-        <>
-          <div className="library-stats">
-            {[
-              [all.length, "allWorks"],
-              [roots.length, "originalCount"],
-              [all.length - roots.length, "remixCount"],
-            ].map(([n, label]) => (
-              <div key={label}>
-                <strong>{String(n).padStart(2, "0")}</strong>
-                <span>{t(label)}</span>
-              </div>
-            ))}
-          </div>
-          <Link
-            className="world-feature"
-            to={"/worlds/" + featured.story_world_id}
-          >
-            <VersionVisual t={t} v={featured} large />
-            <span className="world-feature-badge">
-              <GitBranch size={15} />
-              {t("growingWorld")}
-            </span>
-            <span className="btn primary small world-feature-cta">
-              {t("continueStory")}
-              <ArrowUpRight size={16} />
-            </span>
-          </Link>
-          <div className="source-meaning">
-            <GitBranch />
-            <div>
-              <strong>{t("rootKept")}</strong>
-              <small>{t("accurateParent")}</small>
-            </div>
-          </div>
-          <div className="library-heading">
-            <h2>{t("yourVersions")}</h2>
-            <select
-              aria-label={t("sort")}
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-            >
-              <option value="newest">{t("newest")}</option>
-              <option value="oldest">{t("oldest")}</option>
-            </select>
-          </div>
-          <input
-            className="library-search"
-            type="search"
-            aria-label={t("searchWorks")}
-            placeholder={t("searchWorks")}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <div className="filter-tabs">
-            {["all", "originals", "remixes", "favorites"].map((f) => (
-              <button
-                key={f}
-                className={filter === f ? "active" : ""}
-                aria-pressed={filter === f}
-                onClick={() => setFilter(f)}
-              >
-                {t(f)}
-              </button>
-            ))}
-          </div>
-          {filtered.length ? (
-            <div className="works-grid">
-              {filtered.map((v) => (
-                <article className="work-card" key={v.id}>
-                  <Link to={"/versions/" + v.id} className="work-image">
-                    {v.image_url ? (
-                      <img src={v.image_url} alt={v.title} />
-                    ) : (
-                      <img
-                        className="work-orb"
-                        src={asset("orb-mark.svg")}
-                        alt=""
-                      />
-                    )}
-                    <span>{t(v.demo ? "textDemo" : "current")}</span>
-                  </Link>
-                  <div>
-                    <div className="work-meta">
-                      <small>
-                        {new Date(
-                          typeof v.created_at === "number"
-                            ? v.created_at * 1000
-                            : v.created_at,
-                        ).toLocaleDateString()}
-                      </small>
-                      <button
-                        className={
-                          "favorite-button " + (v.favorite ? "active" : "")
-                        }
-                        aria-label={t(v.favorite ? "unfavorite" : "favorite")}
-                        aria-pressed={!!v.favorite}
-                        onClick={async () => {
-                          try {
-                            const next = await api<Version>(
-                              "/versions/" + v.id + "/favorite",
-                              {
-                                method: "PATCH",
-                                body: JSON.stringify({ favorite: !v.favorite }),
-                              },
-                            );
-                            setWorks(
-                              all.map((x) =>
-                                x.id === v.id
-                                  ? {
-                                      ...x,
-                                      ...next,
-                                      favorite: next.favorite ?? !v.favorite,
-                                    }
-                                  : x,
-                              ),
-                            );
-                          } catch (e) {
-                            error(e);
-                          }
-                        }}
-                      >
-                        <Bookmark size={17} />
-                      </button>
-                    </div>
-                    <Link to={"/versions/" + v.id}>
-                      <h3>{v.title}</h3>
-                      <p>{v.caption}</p>
-                      <span className="work-open">
-                        {t("open")}
-                        <ArrowUpRight size={16} />
-                      </span>
-                    </Link>
-                    <Link
-                      className="text-button work-growth"
-                      to={
-                        "/worlds/" +
-                        v.story_world_id +
-                        "?version=" +
-                        encodeURIComponent(v.id)
-                      }
-                    >
-                      <GitBranch size={15} />
-                      {t("viewWorld")}
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="empty">
-              <h2>{t("noMatches")}</h2>
-            </div>
-          )}
-        </>
-      )}
-    </main>
-  );
+  return <WorksPanel app={useApp()} />;
 }
 function Remix() {
   const { v, err } = useVersion();
@@ -2185,6 +1919,12 @@ function Remix() {
             {t("lineage")}
             <ArrowUpRight size={16} />
           </Link>
+          <LineageGraph
+            versions={versions.length ? versions : [v]}
+            selected={current.id}
+            onSelect={setSelected}
+            locale={locale}
+          />
           <Link className="text-button" to={"/result/" + current.id}>
             {t("returnSelected")}
           </Link>
@@ -2244,7 +1984,10 @@ function Remix() {
 }
 function World() {
   const { id } = useParams();
-  const { t, user, locale } = useApp();
+  const { t, user, locale, config, setNotice, setAuth, error, navigate } =
+    useApp();
+  const [lineageOpen, setLineageOpen] = useState(false);
+  const [continuing, setContinuing] = useState(false);
   const [items, setItems] = useState<Version[] | null>(null);
   const [err, setErr] = useState(false);
   const [references, setReferences] = useState<AncestorReference[]>([]);
@@ -2441,6 +2184,57 @@ function World() {
               </Link>
             </div>
           </div>
+          <Btn onClick={() => setLineageOpen(true)}>{t("creatorLineage")}</Btn>
+          {lineageOpen && (
+            <LineageSheet
+              versions={items}
+              references={references}
+              selected={current.id}
+              onSelect={setSelected}
+              locale={locale}
+              close={() => setLineageOpen(false)}
+            />
+          )}
+          <div className="selected-node-dock">
+            <span>
+              {t("selectedVersion")} · {current.title}
+            </span>
+            <Btn
+              kind="primary"
+              disabled={continuing || !current.remix_allowed}
+              onClick={async () => {
+                if (continuing) return;
+                if (!config?.generation_enabled) {
+                  setNotice(t("providerOff"));
+                  return;
+                }
+                if (!user) {
+                  setAuth(true);
+                  return;
+                }
+                setContinuing(true);
+                try {
+                  const job = await api<Job>("/generation-jobs", {
+                    method: "POST",
+                    headers: { "Idempotency-Key": crypto.randomUUID() },
+                    body: JSON.stringify({
+                      kind: "continuation",
+                      parent_version_id: current.id,
+                      locale: locale === "zh-CN" ? "zh-CN" : "en",
+                    }),
+                  });
+                  sessionStorage.setItem("eupra.job", job.id);
+                  navigate("/jobs/" + job.id);
+                } catch (e) {
+                  error(e);
+                } finally {
+                  setContinuing(false);
+                }
+              }}
+            >
+              {t("continueSelected")}
+            </Btn>
+          </div>
           <h2 className="world-section-title">{t("chooseMoment")}</h2>
           <VersionStrip
             t={t}
@@ -2522,7 +2316,7 @@ function VersionLineage({ v }: { v: Version }) {
           const parent: string | null = cursor.parent_version_id;
           cursor = all.find((n) => n.id === parent);
         }
-        setNodes(path);
+        setNodes(all);
         setReferences(
           (r.ancestor_references || []).filter((ref: AncestorReference) =>
             path.some(

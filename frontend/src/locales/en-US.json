@@ -240,5 +240,11 @@
   "noBranches": "No existing child versions yet. Continue this version to start a branch.",
   "returnSelected": "Return to selected result",
   "yourStoryWorlds": "Your private story worlds",
-  "leaveUnknownJobConfirm": "Leave before task status is known? The task may still be running. You can return to check it."
+  "leaveUnknownJobConfirm": "Leave before task status is known? The task may still be running. You can return to check it.",
+  "viewActualSource": "View actual source",
+  "creatorLineage": "Creator lineage",
+  "continueSelected": "Continue selected version",
+  "nextExample": "Next example",
+  "exampleSource": "Example source",
+  "shibaExample": "Shiba security agent"
 }

@@ -1,0 +1,101 @@
+.sp-page {
+  padding-bottom: 150px;
+}
+.sp-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 22px 0;
+}
+.sp-comparison article {
+  min-width: 0;
+  background: #13192b;
+  border: 1px solid #31354d;
+  border-radius: 24px;
+  padding: 16px;
+}
+.sp-comparison h3 {
+  margin: 0 0 14px;
+}
+.sp-comparison .version-visual {
+  min-height: 210px;
+}
+.sp-comparison .version-visual h2 {
+  font-size: 19px;
+}
+.sp-comparison .btn {
+  width: 100%;
+  margin-top: 10px;
+}
+.sp-provenance {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  color: #c2bdd8;
+}
+.sp-empty {
+  min-height: 180px;
+  display: grid;
+  align-items: center;
+  line-height: 1.6;
+  color: #cbc7e2;
+}
+.sp-sticky {
+  position: sticky;
+  bottom: 12px;
+  background: #111729ed;
+  backdrop-filter: blur(16px);
+  padding: 14px;
+  border: 1px solid #4b4268;
+  border-radius: 24px;
+  z-index: 12;
+  box-shadow: 0 12px 40px #0006;
+}
+.sp-sticky .fineprint {
+  margin: 8px 0 0;
+}
+.sp-select {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  margin-top: 14px;
+}
+.sp-select select {
+  width: 100%;
+  min-width: 0;
+  background: #171c30;
+  border: 1px solid #625378;
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px;
+}
+@media (max-width: 550px) {
+  .sp-comparison {
+    gap: 10px;
+  }
+  .sp-comparison article {
+    padding: 10px;
+    border-radius: 18px;
+  }
+  .sp-comparison h3 {
+    font-size: 15px;
+  }
+  .sp-comparison .version-visual {
+    min-height: 180px;
+  }
+  .sp-comparison .version-visual h2 {
+    font-size: 15px;
+  }
+  .sp-comparison .btn {
+    font-size: 12px;
+    padding: 10px;
+  }
+  .sp-comparison .fineprint {
+    font-size: 11px;
+  }
+  .sp-empty {
+    font-size: 13px;
+  }
+  .sp-sticky {
+    bottom: 10px;
+  }
+}

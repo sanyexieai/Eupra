@@ -55,6 +55,15 @@ try:
    page.wait_for_function("el => el.currentTime > 0.1",arg=player.element_handle())
    player.evaluate('el=>el.pause()')
    passed('WEB-01 original design video actually plays with explicit pre-made labeling')
+   page.locator('.story-card').first.click()
+   example_sheet=page.get_by_role('dialog')
+   expect(example_sheet.locator('.source-sheet-image')).to_have_attribute('src','/assets/demo-source.webp')
+   for filename in ['cat-ceo-hero.webp','cat-moon-hero.webp','shiba-agent.webp']:
+    example_sheet.get_by_role('button',name='Next example',exact=True).click()
+    expect(example_sheet.locator('.source-sheet-image')).to_have_attribute('src','/assets/'+filename)
+   page.screenshot(path=str(ART/('WEB-01-example-sheet-desktop-en-US-'+MODE+'.png')),full_page=True)
+   page.keyboard.press('Escape'); expect(example_sheet).to_have_count(0)
+   passed('WEB-01 actual sample source and three labeled original examples switch without creating personal work')
    page.goto(BASE+'/welcome'); page.wait_for_selector('.welcome-portal')
    expect(page.locator('.hero')).to_have_count(0)
    for input_label in ['Choose a welcome photo','Capture a welcome photo']:
@@ -101,6 +110,13 @@ try:
     page.get_by_text('Text concept demo · No image generated',exact=True).first.wait_for()
     expect(page.locator('.result-art > img')).to_have_count(0)
     passed('CN-02→03→04 real API text-demo job, no invented image')
+    page.get_by_role('button',name='View actual source',exact=True).click()
+    source_sheet=page.get_by_role('dialog',name='View actual source',exact=True)
+    source_sheet.get_by_text('Another meeting that could have been an email.',exact=True).wait_for()
+    page.screenshot(path=str(ART/'CN-04-source-sheet-desktop-en-US-demo.png'),full_page=True)
+    page.keyboard.press('Escape'); expect(source_sheet).to_have_count(0)
+    expect(page).to_have_url(BASE+'/result/'+root_id)
+    passed('CN-04 actual private source sheet shows full original input and closes without changing version')
     root_version=page.request.get(BASE+'/api/v1/versions/'+root_id).json()
     world_id=root_version['story_world_id']
     page.get_by_role('button',name='Push it further',exact=True).click()
@@ -140,6 +156,19 @@ try:
     expect(page.locator('.work-card')).to_have_count(1)
     page.get_by_role('searchbox',name='Search your creations').fill('')
     passed('CN-08 world-name search, filter/query reload and favorite persistence')
+    page.get_by_role('button',name='Drafts',exact=True).click()
+    page.locator('.dl-item').get_by_role('link',name='Continue editing',exact=True).wait_for()
+    page.screenshot(path=str(ART/'CN-08-draft-tab-desktop-en-US-demo.png'),full_page=True)
+    page.get_by_role('button',name='All',exact=True).click()
+    expect(page.locator('.work-card')).to_have_count(2)
+    page.locator('.work-card').first.get_by_role('button',name='Work details:',exact=False).click()
+    work_sheet=page.get_by_role('dialog',name='Work details',exact=True)
+    work_sheet.get_by_role('link',name='Share and export',exact=True).wait_for()
+    assert work_sheet.get_by_role('link',name='Share and export',exact=True).get_attribute('href').startswith('/share/')
+    page.screenshot(path=str(ART/'CN-08-work-drawer-desktop-en-US-demo.png'),full_page=True)
+    page.keyboard.press('Escape'); expect(work_sheet).to_have_count(0)
+    expect(page.locator('.work-card')).to_have_count(2)
+    passed('CN-08 first-class drafts and actual work drawer preserve library context and gated sharing')
     page.goto(BASE+'/worlds/'+world_id); page.wait_for_selector('.timeline-node')
     expect(page.locator('.timeline-node')).to_have_count(2)
     strip=page.get_by_role('group',name='Browse story versions')
@@ -148,6 +177,15 @@ try:
     expect(page.locator('.world-context').get_by_role('link',name='Push it further',exact=True)).to_have_attribute('href','/remix/'+root_id)
     expect(page).to_have_url(BASE+'/worlds/'+world_id+'?version='+root_id)
     passed('CN-10 historical node selection preserves branch target')
+    page.get_by_role('button',name='Creator lineage',exact=True).click()
+    lineage_sheet=page.get_by_role('dialog',name='Creator lineage',exact=True)
+    lineage_sheet.wait_for(); page.screenshot(path=str(ART/'CN-10-lineage-sheet-desktop-en-US-demo.png'),full_page=True)
+    page.keyboard.press('Escape'); expect(lineage_sheet).to_have_count(0)
+    page.get_by_role('button',name='Continue selected version',exact=True).click()
+    reveal(page)
+    selected_child=page.request.get(BASE+'/api/v1/versions/'+page.url.rsplit('/',1)[1]).json()
+    assert selected_child['parent_version_id']==root_id
+    passed('CN-10 lineage sheet closes and persistent action creates a real child of the selected historical node')
     page.goto(BASE+'/share/'+root_id)
     create=page.get_by_role('button',name='Create local preview link')
     create.wait_for(); assert not create.is_enabled()
@@ -157,16 +195,53 @@ try:
     token=share_url.rsplit('/',1)[1]
     assert page.get_by_text('This creation is on safety hold.',exact=False).count()>0
     passed('CN-06 local text review required; production HOLD unchanged')
+    page.get_by_text('Sharing to other apps',exact=True).click()
+    page.get_by_text('WeChat / Moments',exact=True).wait_for()
+    page.get_by_text('This personal poster is not authorized for export, so there is no image to save or upload yet. Complete independent output review and export setup first.',exact=True).wait_for()
+    passed('CN-06 platform guidance explains manual steps and blocked export without pretending a post succeeded')
     guest=browser.new_context(viewport={'width':390,'height':844})
     gp=guest.new_page(); gp.goto(share_url)
     gp.get_by_role('button',name='再离谱点',exact=True).wait_for()
-    assert gp.locator('.public-share .version-visual').count()==1
+    expect(gp.locator('.public-share > .version-visual')).to_have_count(1)
+    expect(gp.locator('.sp-comparison article')).to_have_count(2)
+    assert gp.locator('.sp-comparison a').count()==0
     safe=gp.request.get(BASE+'/api/v1/share/'+token).json()['version']
     assert 'source_id' not in safe and 'story_memory' not in safe
     gp.get_by_role('button',name='再离谱点',exact=True).click()
     gp.get_by_role('dialog').wait_for()
     passed('CN-07 unauthenticated safe preview; remix retains capability and asks login')
     guest.close()
+    page.goto(share_url)
+    own_export=page.get_by_role('link',name='Save or share your version',exact=True)
+    own_export.wait_for()
+    chosen_id=own_export.get_attribute('href').rsplit('/',1)[1]
+    assert page.request.get(BASE+'/api/v1/versions/'+chosen_id).json()['parent_version_id']==root_id
+    page.screenshot(path=str(ART/'CN-07-own-child-comparison-desktop-en-US-demo.png'),full_page=True)
+    passed('CN-07 compares only an actual owned child and routes save/share to its gated export')
+    intercepted=[]
+    def cancel_real_shared_job(route):
+     response=route.fetch()
+     if response.ok:
+      value=response.json(); cancelled_response=page.request.post(BASE+'/api/v1/generation-jobs/'+value['id']+'/cancel')
+      intercepted.append((value['id'],cancelled_response.json()['status']))
+     route.fulfill(response=response)
+    page.route('**/api/v1/generation-jobs',cancel_real_shared_job)
+    page.get_by_role('button',name='Push it further',exact=True).click()
+    page.get_by_role('button',name='Retry original input',exact=True).wait_for()
+    page.unroute('**/api/v1/generation-jobs',cancel_real_shared_job)
+    assert intercepted and intercepted[0][1]=='cancelled'
+    page.reload()
+    page.get_by_role('button',name='Retry original input',exact=True).wait_for()
+    page.goto(share_url)
+    page.get_by_role('link',name='Save or share your version',exact=True).wait_for()
+    page.get_by_role('link',name='Return to creation or resume your last task',exact=True).click()
+    page.locator('a.resume').click()
+    expect(page).to_have_url(BASE+'/jobs/'+intercepted[0][0])
+    page.get_by_role('button',name='Retry original input',exact=True).click()
+    reveal(page)
+    retried_shared=page.request.get(BASE+'/api/v1/versions/'+page.url.rsplit('/',1)[1]).json()
+    assert retried_shared['parent_version_id']==root_id
+    passed('CN-03 cancelled shared continuation retries original request with valid memory-held capability and exact parent')
     cancel_response=page.request.post(BASE+'/api/v1/generation-jobs',headers={'Idempotency-Key':uuid.uuid4().hex},data={'kind':'first_twist','text':'Cancellation regression case','locale':'en'})
     assert cancel_response.ok
     cancellation_candidate=cancel_response.json()['id']

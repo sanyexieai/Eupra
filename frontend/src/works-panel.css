@@ -1,0 +1,93 @@
+.work-card button.work-image {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  background: transparent;
+  color: inherit;
+  position: relative;
+  display: block;
+}
+.wp-tab-count {
+  font-size: 0.75em;
+  opacity: 0.75;
+  margin-left: 4px;
+}
+.wp-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  background: #060916b8;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.wp-drawer {
+  width: min(100%, 620px);
+  max-height: 90dvh;
+  overflow: auto;
+  background: #101528;
+  color: #f9f9fe;
+  border: 1px solid #ffffff20;
+  border-radius: 26px 26px 0 0;
+  padding: 22px 22px calc(24px + env(safe-area-inset-bottom));
+  box-shadow: 0 -15px 60px #0006;
+}
+.wp-drawer header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.wp-drawer header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.wp-drawer .version-visual {
+  max-height: 350px;
+  border-radius: 18px;
+  overflow: hidden;
+}
+.wp-drawer h3 {
+  font-size: 24px;
+  margin: 20px 0 8px;
+  overflow-wrap: anywhere;
+}
+.wp-caption {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #cbc7e2;
+  line-height: 1.65;
+}
+.wp-parent {
+  color: #ada8c9;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.wp-parent span {
+  display: block;
+  margin-top: 5px;
+}
+.wp-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 20px 0;
+}
+.wp-actions .btn {
+  white-space: normal;
+  text-align: center;
+}
+.wp-full-detail {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  color: #bfaeff;
+  font-size: 14px;
+}
+.wp-drawer:focus {
+  outline: none;
+}

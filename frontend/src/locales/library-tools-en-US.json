@@ -27,5 +27,6 @@
   "refresh": "Refresh list",
   "close": "Collapse",
   "open": "Open work",
-  "login": "Sign in to view drafts and trash"
+  "login": "Sign in to view drafts and trash",
+  "noMatches": "No drafts match this search."
 }

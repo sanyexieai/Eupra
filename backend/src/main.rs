@@ -6,6 +6,7 @@ mod personal;
 mod planning;
 mod provider;
 mod sharing;
+mod source;
 use argon2::{
     password_hash::{PasswordHash, SaltString},
     Argon2, PasswordHasher, PasswordVerifier,
@@ -189,6 +190,7 @@ fn routes(a: App) -> Router {
         .route("/api/v1/drafts/{id}/restore", post(assets::restore_draft))
         .route("/api/v1/generation-jobs/{id}/retry", post(retry_job))
         .route("/api/v1/versions/{id}/children", get(children))
+        .route("/api/v1/versions/{id}/source", get(source::read))
         .route("/api/v1/versions/{id}/save", post(save))
         .route("/api/v1/versions/{id}/remix-permission", patch(permission))
         .route("/api/v1/versions/{id}/publish", post(publish))

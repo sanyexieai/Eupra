@@ -338,6 +338,18 @@ export function ExportPanel({ app, version }: { app: App; version: Version }) {
               {c("revoked")}
             </p>
           )}
+          <details className="ep-platform-guide">
+            <summary>{c("platformGuide")}</summary>
+            <p>{c("platformIntro")}</p>
+            <ul>
+              <li>{c("platformWechat")}</li>
+              <li>{c("platformXhs")}</li>
+              <li>{c("platformDouyin")}</li>
+            </ul>
+            <p>{c("platformBlocked")}</p>
+            <p>{c("platformSteps")}</p>
+            <p>{c("platformLocal")}</p>
+          </details>
           <Link className="ep-video-link" to={"/video/" + version.id}>
             <span className="ep-video-icon">
               <Video size={20} />

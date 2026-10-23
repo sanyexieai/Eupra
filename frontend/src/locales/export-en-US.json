@@ -36,5 +36,13 @@
   "shareDisabledTitle": "Preview links are unavailable here",
   "shareDisabledBody": "This service has not enabled this kind of preview. The original work remains private.",
   "retry": "Try loading again",
-  "create": "Start your own creation"
+  "create": "Start your own creation",
+  "platformGuide": "Sharing to other apps",
+  "platformIntro": "No platform SDK is connected. Opening a share sheet is not confirmation that anything was posted.",
+  "platformWechat": "WeChat / Moments",
+  "platformXhs": "Xiaohongshu",
+  "platformDouyin": "Douyin",
+  "platformSteps": "When an approved poster is available, save it first, then open the destination app yourself, choose the saved image, review the caption and visibility, and publish there.",
+  "platformBlocked": "This personal poster is not authorized for export, so there is no image to save or upload yet. Complete independent output review and export setup first.",
+  "platformLocal": "Local preview links are for development on this machine. They are not publicly accessible links for external platforms."
 }
