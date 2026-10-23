@@ -11,6 +11,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -20,7 +22,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Rust toolchain
-        run: rustup update stable --profile minimal && rustup default stable
+        run: rustup toolchain install stable --profile minimal && rustup default stable
       - name: Rust tests and build
         run: cargo test --manifest-path backend/Cargo.toml --locked && cargo build --manifest-path backend/Cargo.toml --locked
       - name: Frontend dependencies and build
