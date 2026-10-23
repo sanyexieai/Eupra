@@ -43,7 +43,7 @@ try:
   page=context.new_page(); errors=[]; page.on('pageerror',lambda e:errors.append(str(e)))
   try:
    page.goto(BASE); page.wait_for_selector('.hero')
-   assert page.locator('h1').count()==1; passed('WEB-01 landing renders')
+   expect(page.locator('h1')).to_have_count(1); passed('WEB-01 landing renders')
    page.get_by_role('button',name='界面语言').click()
    page.get_by_role('heading',name='Live the impossible.').wait_for()
    passed('language switches landing to English')
@@ -54,7 +54,7 @@ try:
    player.evaluate('el=>el.pause()')
    passed('WEB-01 original design video actually plays with explicit pre-made labeling')
    page.goto(BASE+'/welcome'); page.wait_for_selector('.welcome-portal')
-   assert page.locator('.hero').count()==0
+   expect(page.locator('.hero')).to_have_count(0)
    for input_label in ['Choose a welcome photo','Capture a welcome photo']:
     page.get_by_label(input_label,exact=True).set_input_files(str(ROOT/'frontend/public/assets/demo-source.webp'))
     page.wait_for_url('**/create')
@@ -97,7 +97,7 @@ try:
     reveal(page)
     root_id=page.url.rsplit('/',1)[1]
     page.get_by_text('Text concept demo · No image generated',exact=True).first.wait_for()
-    assert page.locator('.result-art > img').count()==0
+    expect(page.locator('.result-art > img')).to_have_count(0)
     passed('CN-02→03→04 real API text-demo job, no invented image')
     root_version=page.request.get(BASE+'/api/v1/versions/'+root_id).json()
     world_id=root_version['story_world_id']
@@ -117,27 +117,27 @@ try:
     expect(page).to_have_url(BASE+'/result/'+child_id)
     passed('CN-04/05 actual inline child browsing and selected-version result return')
     page.goto(BASE+'/works'); page.wait_for_selector('.work-card')
-    assert page.locator('.work-card').count()==2
+    expect(page.locator('.work-card')).to_have_count(2)
     page.get_by_role('button',name='Remixes',exact=True).click()
-    assert page.locator('.work-card').count()==1
+    expect(page.locator('.work-card')).to_have_count(1)
     page.get_by_role('button',name='Favorite creation',exact=True).click()
     page.get_by_role('button',name='Remove favorite',exact=True).wait_for()
     page.get_by_role('button',name='Favorites',exact=True).click()
-    assert page.locator('.work-card').count()==1
+    expect(page.locator('.work-card')).to_have_count(1)
     page.get_by_role('searchbox',name='Search your creations').fill('impossible-search-no-match')
     page.get_by_text('No matching versions',exact=True).wait_for()
     page.reload(); page.get_by_text('No matching versions',exact=True).wait_for()
     expect(page.get_by_role('searchbox',name='Search your creations')).to_have_value('impossible-search-no-match')
     page.get_by_role('searchbox',name='Search your creations').fill('')
     page.wait_for_selector('.work-card')
-    assert page.locator('.work-card').count()==1
+    expect(page.locator('.work-card')).to_have_count(1)
     own_world=next(w for w in page.request.get(BASE+'/api/v1/me/story-worlds').json()['items'] if w['id']==world_id)
     page.get_by_role('searchbox',name='Search your creations').fill(own_world['title'])
     expect(page.locator('.work-card')).to_have_count(1)
     page.get_by_role('searchbox',name='Search your creations').fill('')
     passed('CN-08 world-name search, filter/query reload and favorite persistence')
     page.goto(BASE+'/worlds/'+world_id); page.wait_for_selector('.timeline-node')
-    assert page.locator('.timeline-node').count()==2
+    expect(page.locator('.timeline-node')).to_have_count(2)
     strip=page.get_by_role('group',name='Browse story versions')
     strip.get_by_role('button').first.click()
     expect(strip.get_by_role('button').first).to_have_attribute('aria-pressed','true')
