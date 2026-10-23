@@ -460,7 +460,9 @@ try:
    anonymous.close()
    page.reload(); page.get_by_role('heading',name='Browser test creator',exact=True).wait_for()
    preference=page.get_by_role('switch',name='Local notification preference',exact=True)
-   preference.check()
+   expect(preference).not_to_be_checked()
+   preference.click()
+   expect(preference).to_be_checked()
    page.wait_for_function("fetch('/api/v1/me/settings').then(r=>r.json()).then(s=>s.notifications_enabled===true)")
    page.reload(); expect(page.get_by_role('switch',name='Local notification preference',exact=True)).to_be_checked()
    assert page.request.get(BASE+'/api/v1/me/profile').json()['nickname']=='Browser test creator'
